@@ -89,21 +89,43 @@ function App() {
   };
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom align="center">
+    <Container 
+      maxWidth="md"
+      sx={{
+        px: { xs: 2, sm: 3, md: 4 }, // 画面サイズに応じたパディング調整
+      }}
+    >
+      <Box sx={{ my: { xs: 2, sm: 3, md: 4 } }}>
+        <Typography 
+          variant="h3" 
+          component="h1" 
+          gutterBottom 
+          align="center"
+          sx={{ 
+            fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' } // レスポンシブなフォントサイズ
+          }}
+        >
           星AI
         </Typography>
-        <Typography variant="h5" component="h2" gutterBottom align="center">
+        <Typography 
+          variant="h5" 
+          component="h2" 
+          gutterBottom 
+          align="center"
+          sx={{ 
+            fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.5rem' } // レスポンシブなフォントサイズ
+          }}
+        >
           AIがあなたの「今夜だけの星座」を作ります
         </Typography>
 
         <Paper 
           sx={{ 
-            p: 3, 
-            mt: 4,
+            p: { xs: 2, sm: 2, md: 3 }, // 画面サイズに応じたパディング調整
+            mt: { xs: 2, sm: 3, md: 4 },
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            color: 'white'
+            color: 'white',
+            borderRadius: '8px' // 角丸を強化
           }}
         >
           <form onSubmit={handleSubmit}>
@@ -137,12 +159,15 @@ function App() {
               variant="contained"
               fullWidth
               disabled={loading || !keyword}
+              size="large" // ボタンサイズを大きくしてタッチしやすく
               sx={{
                 mt: 2,
+                py: { xs: 1.5, sm: 1.5, md: 1 }, // モバイルでより大きなタッチエリア
                 backgroundColor: '#4a90e2',
                 '&:hover': {
                   backgroundColor: '#357abd',
                 },
+                fontSize: { xs: '1rem', sm: '1rem', md: '1rem' }
               }}
             >
               {loading ? '処理中...' : '星座を生成'}
@@ -168,4 +193,4 @@ function App() {
   )
 }
 
-export default App                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+export default App                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

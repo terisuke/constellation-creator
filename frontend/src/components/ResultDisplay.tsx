@@ -150,8 +150,24 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
   }
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mt: 3, backgroundColor: '#1a1a1a', color: '#ffffff' }}>
-      <Typography variant="h5" gutterBottom sx={{ color: '#4a90e2' }}>
+    <Paper 
+      elevation={3} 
+      sx={{ 
+        p: { xs: 2, sm: 2, md: 3 }, 
+        mt: 3, 
+        backgroundColor: '#1a1a1a', 
+        color: '#ffffff',
+        borderRadius: '8px' // 角丸を強化
+      }}
+    >
+      <Typography 
+        variant="h5" 
+        gutterBottom 
+        sx={{ 
+          color: '#4a90e2',
+          fontSize: { xs: '1.4rem', sm: '1.5rem', md: '1.5rem' } // レスポンシブなフォントサイズ
+        }}
+      >
         生成された星座: {result.constellation_name}
       </Typography>
       
@@ -168,14 +184,16 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
         margin: '0 auto',
         backgroundColor: '#000',
         borderRadius: '4px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.3)' // シャドウを追加
       }}>
         <canvas 
           ref={canvasRef} 
           style={{ 
             width: '100%', 
             height: 'auto',
-            display: 'block'
+            display: 'block',
+            touchAction: 'manipulation' // タッチ操作の改善
           }}
         />
         
@@ -202,7 +220,15 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
         )}
       </Box>
       
-      <Typography variant="body1" sx={{ mt: 2, whiteSpace: 'pre-line' }}>
+      <Typography 
+        variant="body1" 
+        sx={{ 
+          mt: 2, 
+          whiteSpace: 'pre-line',
+          fontSize: { xs: '0.9rem', sm: '1rem', md: '1rem' }, // モバイル向けに小さめのフォント
+          lineHeight: 1.6 // 読みやすさのために行間を広げる
+        }}
+      >
         {result.story}
       </Typography>
     </Paper>
