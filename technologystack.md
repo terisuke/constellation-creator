@@ -1,0 +1,40 @@
+# 技術スタック
+
+## フロントエンド
+- React: ^18.0.0
+- TypeScript: ^5.0.0
+- Vite: ^5.0.0
+- Material-UI: ^5.0.0
+
+## バックエンド
+- Python: ^3.9.0
+- FastAPI: ^0.100.0
+- OpenCV: ^4.8.0
+- OpenAI GPT-4 API
+- Stable Diffusion API
+
+## 開発ツール
+- Node.js: ^18.0.0
+- npm: ^10.0.0
+- pip: ^23.0.0
+
+## 外部サービス連携
+- OpenAI GPT-4 API
+  - 星座名生成
+  - 星座ストーリー生成
+- Stable Diffusion API
+  - 星空画像生成
+  - 画像処理と最適化
+
+## 環境変数
+バックエンドの`.env`ファイルに以下の環境変数を設定してください：
+```
+OPENAI_API_KEY=your_api_key_here
+STABLE_DIFFUSION_API_KEY=your_api_key_here
+```
+
+## 実装規則
+- フロントエンドのコンポーネントは`frontend/src/components/`に配置
+- バックエンドのAPIエンドポイントは`backend/app/api/routes/`に配置
+- 外部サービス連携は`backend/app/services/`に配置
+- 環境変数は必ず`.env`ファイルで管理
