@@ -34,7 +34,14 @@
 ## 環境変数
 バックエンドの`.env`ファイルに以下の環境変数を設定してください：
 ```
-OPENAI_API_KEY=your_api_key_here
+# OpenAI API設定
+OPENAI_API_KEY=your_openai_api_key
+
+# データベース設定
+DATABASE_URL=postgresql://user:password@localhost:5432/constellation_db
+
+# セキュリティ設定
+SECRET_KEY=your_secret_key
 ```
 
 ## 実装規則

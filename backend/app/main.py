@@ -1,12 +1,24 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 from dotenv import load_dotenv
+import logging
+import os
+
+from app.core.star_detection import get_constellation_points
+from app.core.constellation import draw_constellation_lines
+from app.core.image_processing import validate_image, save_uploaded_image, optimize_image
+
+from app.services.openai_service import generate_constellation_name, generate_constellation_story
 
 
 # 環境変数の読み込み
 load_dotenv()
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 app = FastAPI(
@@ -28,7 +40,6 @@ app.add_middleware(
 
 class ConstellationRequest(BaseModel):
     keyword: str
-    generate_image: bool = False
 
 
 @app.get("/")
@@ -43,21 +54,33 @@ async def health_check():
 
 @app.post("/api/generate-constellation")
 async def generate_constellation(
-    request: ConstellationRequest,
-    image: Optional[UploadFile] = File(None)
+    keyword: str = Form(...),
+    image: UploadFile = File(...)
 ):
     try:
-        # TODO: 1. 画像の処理（アップロードまたは生成）
-        # TODO: 2. 星の検出
-        # TODO: 3. 星座の生成
-        # TODO: 4. 名前とストーリーの生成
+        content = await image.read()
+        if not validate_image(content):
+            raise HTTPException(status_code=400, detail="無効な画像形式です")
+        image_path = save_uploaded_image(content)
+        optimized_image_path = optimize_image(image_path)
+            
+        constellation_points = get_constellation_points(optimized_image_path)
+        
+        constellation_image_path = draw_constellation_lines(optimized_image_path, constellation_points)
+        
+        # 名前とストーリーの生成
+        name = generate_constellation_name(keyword)
+        story = generate_constellation_story(name, keyword)
+        
         return {
             "status": "success",
             "message": "星座の生成が完了しました",
-            "constellation_name": "サンプル星座",
-            "story": "これはサンプルのストーリーです。"
+            "constellation_name": name,
+            "story": story,
+            "image_path": constellation_image_path
         }
     except Exception as e:
+        logger.error(f"星座生成中にエラーが発生しました: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
