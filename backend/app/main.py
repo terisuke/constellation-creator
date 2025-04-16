@@ -88,7 +88,9 @@ async def generate_constellation(
             logger.info(f"星検出が完了しました: {len(constellation_points)}個のクラスタを検出")
             
             logger.info("星座の生成を開始します")
-            constellation_image_path = draw_constellation_lines(optimized_image_path, constellation_points)
+            constellation_result = draw_constellation_lines(optimized_image_path, constellation_points)
+            constellation_image_path = constellation_result["image_path"]
+            constellation_data = constellation_result["constellation_data"]
             logger.info(f"星座の生成が完了しました: {constellation_image_path}")
         except Exception as constellation_error:
             logger.error(f"星座の生成中にエラーが発生しました: {constellation_error}")
@@ -114,7 +116,9 @@ async def generate_constellation(
             "message": "星座の生成が完了しました",
             "constellation_name": name,
             "story": story,
-            "image_path": constellation_image_path
+            "image_path": constellation_image_path,
+            "stars": constellation_data["stars"],
+            "constellation_lines": constellation_data["lines"]
         }
     except Exception as e:
         logger.error(f"星座生成中にエラーが発生しました: {str(e)}")

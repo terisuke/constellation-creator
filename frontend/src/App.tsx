@@ -22,6 +22,8 @@ function App() {
     constellation_name: string;
     story: string;
     image_path?: string;
+    stars?: Array<{x: number, y: number}>;
+    constellation_lines?: Array<{start: {x: number, y: number}, end: {x: number, y: number}}>;
   } | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +38,7 @@ function App() {
     }
 
     try {
-      let formData = new FormData()
+      const formData = new FormData()
       formData.append('keyword', keyword)
       formData.append('image', image)
       
@@ -129,6 +131,8 @@ function App() {
               constellationName={result.constellation_name}
               story={result.story}
               imagePath={result.image_path}
+              stars={result.stars}
+              constellationLines={result.constellation_lines}
             />
           )}
         </Paper>
@@ -137,4 +141,4 @@ function App() {
   )
 }
 
-export default App                          
+export default App                                                                                                                                                            
