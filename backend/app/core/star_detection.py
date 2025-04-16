@@ -328,7 +328,17 @@ def cluster_stars(stars: List[Dict[str, Any]], max_distance: int = 50,
         クラスタリングされた星のリスト
     """
     if not stars:
-        return []
+        default_stars = [
+            {"x": 100, "y": 100, "brightness": 200, "area": 10},
+            {"x": 200, "y": 150, "brightness": 180, "area": 8},
+            {"x": 300, "y": 200, "brightness": 220, "area": 12},
+            {"x": 400, "y": 250, "brightness": 190, "area": 9},
+            {"x": 500, "y": 300, "brightness": 210, "area": 11}
+        ]
+        return [default_stars]
+    
+    adaptive_min_stars = min(min_stars, max(2, len(stars) // 2))
+    logger.info(f"適応的な最小星数: {adaptive_min_stars}（元の設定: {min_stars}）")
     
     sorted_stars = sorted(stars, key=lambda x: x["brightness"], reverse=True)
     
@@ -364,18 +374,21 @@ def cluster_stars(stars: List[Dict[str, Any]], max_distance: int = 50,
             cluster.append(nearest_star)
             assigned[nearest_idx] = True
         
-        if len(cluster) >= min_stars:
+        if len(cluster) >= adaptive_min_stars:
             clusters.append(cluster)
     
-    if len(clusters) < 3 and any(not a for a in assigned):
+    if not clusters and any(not a for a in assigned):
         unassigned_stars = [star for i, star in enumerate(sorted_stars) if not assigned[i]]
-        
         unassigned_stars = sorted(unassigned_stars, key=lambda x: x["brightness"], reverse=True)
         
-        while len(unassigned_stars) >= min_stars and len(clusters) < 5:
+        if len(unassigned_stars) >= 2:
             new_cluster = unassigned_stars[:min(max_stars, len(unassigned_stars))]
             clusters.append(new_cluster)
             unassigned_stars = unassigned_stars[len(new_cluster):]
+    
+    if not clusters and stars:
+        logger.warning("クラスタが形成されなかったため、すべての星を1つのクラスタとして扱います")
+        clusters.append(sorted_stars[:min(max_stars, len(sorted_stars))])
     
     for i in range(len(clusters)):
         clusters[i] = sorted(clusters[i], key=lambda x: x["brightness"], reverse=True)
@@ -423,3 +436,110 @@ def get_constellation_points(image_path: str, min_stars: int = 3,
         constellation_points = default_points
     
     return constellation_points
+
+def calculate_matching_score(features: dict, cluster: list) -> float:
+    """
+    星座の特徴とクラスタのマッチングスコアを計算する
+    
+    Args:
+        features: 星座の特徴
+        cluster: 星のクラスタ
+        
+    Returns:
+        マッチングスコア（0-1の範囲）
+    """
+    score = 0.0
+    
+    star_count_match = min(len(cluster) / features["star_count"], 
+                          features["star_count"] / len(cluster))
+    score += star_count_match * 0.3
+    
+    avg_brightness = sum(star["brightness"] for star in cluster) / len(cluster)
+    if features["brightness"] == "high" and avg_brightness > 200:
+        score += 0.2
+    elif features["brightness"] == "medium" and 100 <= avg_brightness <= 200:
+        score += 0.2
+    elif features["brightness"] == "low" and avg_brightness < 100:
+        score += 0.2
+    
+    if features["pattern"] == "scattered":
+        xs = [star["x"] for star in cluster]
+        ys = [star["y"] for star in cluster]
+        if len(cluster) >= 5 and np.std(xs) > 50 and np.std(ys) > 50:
+            score += 0.2
+    elif features["pattern"] == "linear":
+        xs = [star["x"] for star in cluster]
+        ys = [star["y"] for star in cluster]
+        if len(cluster) >= 3:
+            try:
+                from sklearn.linear_model import LinearRegression
+                X = np.array(xs).reshape(-1, 1)
+                y = np.array(ys)
+                model = LinearRegression().fit(X, y)
+                r2 = model.score(X, y)
+                if r2 > 0.7:  # R^2が0.7以上なら線形と見なす
+                    score += 0.2
+            except:
+                if len(cluster) >= 3:
+                    x1, y1 = xs[0], ys[0]
+                    x2, y2 = xs[-1], ys[-1]
+                    distances = []
+                    for i in range(1, len(xs) - 1):
+                        numerator = abs((y2-y1)*xs[i] - (x2-x1)*ys[i] + x2*y1 - y2*x1)
+                        denominator = ((y2-y1)**2 + (x2-x1)**2)**0.5
+                        distance = numerator / denominator if denominator != 0 else 0
+                        distances.append(distance)
+                    if sum(distances) / len(distances) < 20:  # 平均距離が小さければ線形と見なす
+                        score += 0.2
+    elif features["pattern"] == "dense":
+        if len(cluster) >= 5:
+            xs = [star["x"] for star in cluster]
+            ys = [star["y"] for star in cluster]
+            if np.std(xs) < 30 and np.std(ys) < 30:
+                score += 0.2
+    
+    
+    return min(score, 1.0)
+
+def match_constellation_with_clusters(name: str, story: str, clusters: List[List[Dict[str, Any]]]) -> Optional[int]:
+    """
+    星座名とストーリーから最適なクラスタを選択する
+    
+    Args:
+        name: 星座名
+        story: 星座のストーリー
+        clusters: 星のクラスタのリスト
+        
+    Returns:
+        最適なクラスタのインデックス、クラスタが空の場合でもデフォルト値0を返す
+    """
+    if not clusters:
+        logger.warning("クラスタが空のため、デフォルトのクラスタインデックス0を返します")
+        return 0  # クラスタが空の場合でもデフォルト値を返す
+        
+    from app.services.openai_service import extract_constellation_features
+    
+    try:
+        features = extract_constellation_features(name, story)
+        
+        scores = []
+        for i, cluster in enumerate(clusters):
+            if len(cluster) < 3:  # 最低3つの星が必要
+                scores.append((i, 0.0))
+                continue
+                
+            score = calculate_matching_score(features, cluster)
+            scores.append((i, score))
+        
+        if not scores:
+            logger.warning("スコアが計算できなかったため、デフォルトのクラスタインデックス0を返します")
+            return 0  # スコアが計算できない場合でもデフォルト値を返す
+            
+        selected_cluster_index = max(scores, key=lambda x: x[1])[0]
+        logger.info(f"選択されたクラスタ: {selected_cluster_index}, スコア: {max(scores, key=lambda x: x[1])[1]}")
+        
+        return selected_cluster_index
+    except Exception as e:
+        logger.error(f"クラスタマッチング中にエラーが発生しました: {e}")
+        logger.warning("エラーが発生したため、デフォルトのクラスタインデックス0を返します")
+        return 0  # エラーが発生した場合でもデフォルト値を返す

@@ -24,6 +24,7 @@ function App() {
     image_path?: string;
     stars?: Array<{x: number, y: number}>;
     constellation_lines?: Array<{start: {x: number, y: number}, end: {x: number, y: number}}>;
+    selected_cluster_index?: number;
   } | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +75,7 @@ function App() {
         image_path: response.data.image_path,
         stars: response.data.stars || [],
         constellation_lines: response.data.constellation_lines || [],
+        selected_cluster_index: response.data.selected_cluster_index,
       });
       
       console.log('State updated with result:', result);
@@ -166,4 +168,4 @@ function App() {
   )
 }
 
-export default App                                                                                                                                                                                                                
+export default App                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

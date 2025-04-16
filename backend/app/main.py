@@ -9,7 +9,7 @@ import logging
 import os
 import shutil
 
-from app.core.star_detection import get_constellation_points
+from app.core.star_detection import get_constellation_points, detect_stars, cluster_stars, match_constellation_with_clusters
 from app.core.constellation import draw_constellation_lines
 from app.core.image_processing import validate_image, save_uploaded_image, optimize_image
 
@@ -70,10 +70,8 @@ def process_image_and_generate_constellation(image_path, keyword):
             story = generate_constellation_story(name, keyword)
             print("星座ストーリーが生成されました")
             
-            # TODO: 生成AIとクラスタの関連付け機能を実装
-            # 将来的に実装予定の機能
-            # selected_cluster_index = match_constellation_with_clusters(name, story, clusters)
-            selected_cluster_index = None
+            selected_cluster_index = match_constellation_with_clusters(name, story, clusters)
+            print(f"選択されたクラスタインデックス: {selected_cluster_index}")
         except Exception as openai_error:
             print(f"OpenAI APIでのテキスト生成中にエラーが発生しました: {openai_error}")
             name = "未知の星座"
@@ -91,7 +89,16 @@ def process_image_and_generate_constellation(image_path, keyword):
         }
     except Exception as e:
         print(f"画像処理と星座生成中にエラーが発生しました: {e}")
-        raise
+        import traceback
+        traceback.print_exc()
+        return {
+            "constellation_name": "エラー",
+            "story": f"星座の生成中にエラーが発生しました: {str(e)}",
+            "image_path": None,
+            "stars": [],
+            "constellation_lines": [],
+            "selected_cluster_index": None
+        }
 
 
 # 環境変数の読み込み
@@ -169,10 +176,23 @@ async def generate_constellation(
         print(f"受信した画像: {image.filename}")
 
         # 画像を一時ファイルとして保存
-        temp_image_path = f"temp_{image.filename}"
-        with open(temp_image_path, "wb") as buffer:
-            content = await image.read()
-            buffer.write(content)
+        content = await image.read()
+        print(f"受信した画像のサイズ: {len(content)} バイト")
+        print(f"画像のMIMEタイプ: {image.content_type}")
+        
+        is_valid = validate_image(content)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail="無効な画像形式です。JPG、PNG、AVIF、HEICなどの画像形式をお試しください。")
+        
+        try:
+            temp_image_path = save_uploaded_image(content, "/tmp")
+            print(f"画像を保存しました: {temp_image_path}")
+        except Exception as save_error:
+            print(f"画像の保存中にエラーが発生しました: {save_error}")
+            temp_image_path = f"/tmp/temp_{image.filename}"
+            with open(temp_image_path, "wb") as buffer:
+                buffer.write(content)
+            print(f"フォールバック: 画像を一時ファイルに保存しました: {temp_image_path}")
 
         # 画像処理とコンステレーション生成
         constellation_data = process_image_and_generate_constellation(temp_image_path, keyword)
