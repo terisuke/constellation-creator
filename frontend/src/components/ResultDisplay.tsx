@@ -100,21 +100,31 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
     
     img.onerror = (e) => {
       console.error('画像の読み込みエラー:', result.image_path, e);
-      setError('画像の読み込みに失敗しました。サーバーから正しいパスが返されているか確認してください。');
+      setError('画像の読み込みに失敗しました。別のパスで再試行します...');
       
       if (result.image_path) {
         try {
           let fallbackPath;
           
-          if (result.image_path.startsWith('/api/') || result.image_path.startsWith('/static/')) {
-            fallbackPath = result.image_path;
-          } else {
+          if (result.image_path.startsWith('/static/')) {
+            const fileName = result.image_path.split('/').pop();
+            fallbackPath = `/api/images/${fileName}`;
+          } 
+          else if (result.image_path.startsWith('/api/images/')) {
+            const fileName = result.image_path.split('/').pop();
+            fallbackPath = `/static/images/${fileName}`;
+          }
+          else {
             const fileName = result.image_path.split('/').pop();
             fallbackPath = `/api/images/${fileName}`;
           }
           
-          console.log('フォールバックパスを試行:', fallbackPath);
-          img.src = fallbackPath;
+          if (fallbackPath !== result.image_path) {
+            console.log('フォールバックパスを試行:', fallbackPath);
+            img.src = fallbackPath;
+          } else {
+            console.error('フォールバックパスが元のパスと同じです。再試行しません。');
+          }
         } catch (err) {
           console.error('フォールバック画像の読み込みにも失敗:', err);
         }
