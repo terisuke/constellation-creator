@@ -1,7 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 from dotenv import load_dotenv
 import logging
 import os
@@ -56,7 +56,8 @@ async def health_check():
 
 @app.post("/api/generate-constellation")
 async def generate_constellation(
-    request: ConstellationRequest,
+    keyword: str = Form(...),
+    generate_image: str = Form('false'),
     image: Optional[UploadFile] = File(None)
 ):
     try:
@@ -67,8 +68,8 @@ async def generate_constellation(
                 raise HTTPException(status_code=400, detail="無効な画像形式です")
             image_path = save_uploaded_image(content)
             optimized_image_path = optimize_image(image_path)
-        elif request.generate_image:
-            image_path = generate_starry_image(request.keyword)
+        elif generate_image.lower() == 'true':
+            image_path = generate_starry_image(keyword)
             optimized_image_path = image_path
         else:
             raise HTTPException(status_code=400, detail="画像が提供されていません")
@@ -78,8 +79,8 @@ async def generate_constellation(
         constellation_image_path = draw_constellation_lines(optimized_image_path, constellation_points)
         
         # 名前とストーリーの生成
-        name = generate_constellation_name(request.keyword)
-        story = generate_constellation_story(name, request.keyword)
+        name = generate_constellation_name(keyword)
+        story = generate_constellation_story(name, keyword)
         
         return {
             "status": "success",
