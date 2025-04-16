@@ -8,10 +8,10 @@ import {
 import axios from 'axios'
 import { useState } from 'react'
 
-import ImageUploader from './components/ImageUploader'
-import KeywordInput from './components/KeywordInput'
-import ResultDisplay from './components/ResultDisplay'
-import LoadingIndicator from './components/LoadingIndicator'
+import ImageUploader from './components/ImageUploader.tsx'
+import KeywordInput from './components/KeywordInput.tsx'
+import ResultDisplay from './components/ResultDisplay.tsx'
+import LoadingIndicator from './components/LoadingIndicator.tsx'
 
 function App() {
   const [keyword, setKeyword] = useState('')
@@ -32,26 +32,20 @@ function App() {
     try {
       let response;
       
+      let formData = new FormData()
+      formData.append('keyword', keyword)
+      
       if (image) {
-        const formData = new FormData()
-        formData.append('keyword', keyword)
         formData.append('image', image)
-
-        response = await axios.post('/api/generate-constellation', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
       } else {
-        response = await axios.post('/api/generate-constellation', {
-          keyword: keyword,
-          generate_image: true
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
+        formData.append('generate_image', 'true')
       }
+
+      response = await axios.post('/api/generate-constellation', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
 
       setResult(response.data)
     } catch (error) {
@@ -144,4 +138,4 @@ function App() {
   )
 }
 
-export default App            
+export default App                  
