@@ -42,19 +42,30 @@ AIがあなたの"今夜だけの星座"を作るWebアプリケーション
 - アクセシビリティ対応
 - 多言語対応
 
+## 主な機能
+
+- 画像アップロードまたはカメラ撮影による星の写真の入力
+- 星の検出とクラスタリング
+- AIによる星座の生成（名前、物語、特徴）
+- 星座線の描画と視覚化
+- 複数の星座パターンの生成と選択
+- 生成された星座の保存と共有
+
 ## 技術スタック
 
 ### フロントエンド
-- React 18.2.0
-- TypeScript 5.3.3
-- Vite 5.0.0
-- Material-UI 5.14.20
+- React + TypeScript
+- Material-UI
+- Canvas API for 星座描画
+- WebRTC for カメラ機能
 
 ### バックエンド
-- Python 3.9以上
-- FastAPI 0.104.1
-- OpenCV 4.8.1.78
-- OpenAI GPT-4 API
+- FastAPI
+- OpenCV for 画像処理
+- OpenAI API for 星座生成
+- scikit-learn for クラスタリング
+- NumPy
+- Pillow
 
 ## 開発環境のセットアップ
 
