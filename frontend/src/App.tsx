@@ -1,44 +1,42 @@
 import {
     Box,
     Button,
-    CircularProgress,
     Container,
     Paper,
-    TextField,
     Typography
 } from '@mui/material'
 import axios from 'axios'
 import { useState } from 'react'
-import { useDropzone } from 'react-dropzone'
+
+import ImageUploader from './components/ImageUploader'
+import KeywordInput from './components/KeywordInput'
+import ResultDisplay from './components/ResultDisplay'
+import LoadingIndicator from './components/LoadingIndicator'
 
 function App() {
   const [keyword, setKeyword] = useState('')
   const [image, setImage] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{
     constellation_name: string;
     story: string;
+    image_path?: string;
   } | null>(null)
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png']
-    },
-    maxFiles: 1,
-    onDrop: (acceptedFiles) => {
-      setImage(acceptedFiles[0])
-    }
-  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError(null)
 
     try {
       const formData = new FormData()
       formData.append('keyword', keyword)
+      
       if (image) {
         formData.append('image', image)
+      } else {
+        formData.append('generate_image', 'true')
       }
 
       const response = await axios.post('/api/generate-constellation', formData, {
@@ -50,7 +48,7 @@ function App() {
       setResult(response.data)
     } catch (error) {
       console.error('Error:', error)
-      // TODO: エラーハンドリング
+      setError('星座の生成中にエラーが発生しました。もう一度お試しください。')
     } finally {
       setLoading(false)
     }
@@ -75,60 +73,31 @@ function App() {
           }}
         >
           <form onSubmit={handleSubmit}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                キーワードを入力
-              </Typography>
-              <TextField
-                fullWidth
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder="例：希望、ドラゴン、未来..."
-                variant="outlined"
+            {/* キーワード入力 */}
+            <KeywordInput 
+              value={keyword}
+              onChange={setKeyword}
+            />
+            
+            {/* 画像アップロード */}
+            <ImageUploader onImageSelect={setImage} />
+            
+            {/* エラーメッセージ */}
+            {error && (
+              <Typography 
+                color="error" 
                 sx={{ 
-                  '& .MuiOutlinedInput-root': {
-                    color: 'white',
-                    '& fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.23)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
-                    },
-                  },
-                }}
-              />
-            </Box>
-
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                星空の画像をアップロード
-              </Typography>
-              <Paper
-                {...getRootProps()}
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  cursor: 'pointer',
-                  border: '2px dashed rgba(255, 255, 255, 0.3)',
+                  mt: 2, 
+                  p: 2, 
+                  backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  borderRadius: '4px'
                 }}
               >
-                <input {...getInputProps()} />
-                {isDragActive ? (
-                  <Typography>画像をドロップしてください...</Typography>
-                ) : (
-                  <Typography>
-                    クリックまたはドラッグ＆ドロップで画像をアップロード
-                  </Typography>
-                )}
-                {image && (
-                  <Typography sx={{ mt: 2 }}>
-                    選択された画像: {image.name}
-                  </Typography>
-                )}
-              </Paper>
-            </Box>
+                {error}
+              </Typography>
+            )}
 
+            {/* 送信ボタン */}
             <Button
               type="submit"
               variant="contained"
@@ -142,19 +111,24 @@ function App() {
                 },
               }}
             >
-              {loading ? <CircularProgress size={24} /> : '星座を生成'}
+              {loading ? '処理中...' : '星座を生成'}
             </Button>
           </form>
 
-          {result && (
+          {/* ローディング表示 */}
+          {loading && (
             <Box sx={{ mt: 4 }}>
-              <Typography variant="h5" gutterBottom>
-                生成された星座: {result.constellation_name}
-              </Typography>
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-                {result.story}
-              </Typography>
+              <LoadingIndicator message="星座を生成中です。しばらくお待ちください..." />
             </Box>
+          )}
+
+          {/* 結果表示 */}
+          {result && !loading && (
+            <ResultDisplay 
+              constellationName={result.constellation_name}
+              story={result.story}
+              imagePath={result.image_path}
+            />
           )}
         </Paper>
       </Box>
@@ -162,4 +136,4 @@ function App() {
   )
 }
 
-export default App 
+export default App  
