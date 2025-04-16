@@ -1,10 +1,13 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, Union
 from dotenv import load_dotenv
 import logging
 import os
+import shutil
 
 from app.core.star_detection import get_constellation_points
 from app.core.constellation import draw_constellation_lines
@@ -99,6 +102,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+os.makedirs("static/images", exist_ok=True)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 class ConstellationRequest(BaseModel):
     keyword: str
@@ -112,6 +119,20 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/api/images/{image_name}")
+async def get_image(image_name: str):
+    """画像ファイルを取得するエンドポイント"""
+    image_path = f"temp_{image_name}"
+    if os.path.exists(image_path):
+        return FileResponse(image_path)
+    
+    static_path = f"static/images/{image_name}"
+    if os.path.exists(static_path):
+        return FileResponse(static_path)
+        
+    raise HTTPException(status_code=404, detail="画像が見つかりません")
 
 
 @app.post("/api/generate-constellation")
@@ -138,11 +159,19 @@ async def generate_constellation(
         print(f"- 星の数: {len(constellation_data.get('stars', []))}")
         print(f"- ラインの数: {len(constellation_data.get('constellation_lines', []))}")
 
+        constellation_image_path = constellation_data["image_path"]
+        static_image_filename = f"{os.path.basename(constellation_image_path)}"
+        static_image_path = f"static/images/{static_image_filename}"
+        
+        shutil.copy(constellation_image_path, static_image_path)
+        
+        image_url = f"/static/images/{static_image_filename}"
+        
         # レスポンスを返す前に形式を確認
         response_data = {
             "constellation_name": constellation_data["constellation_name"],
             "story": constellation_data["story"],
-            "image_path": temp_image_path,
+            "image_path": image_url,
             "stars": constellation_data.get("stars", []),
             "constellation_lines": constellation_data.get("constellation_lines", [])
         }

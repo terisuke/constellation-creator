@@ -24,6 +24,7 @@ interface ResultDisplayProps {
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   useEffect(() => {
     console.log("ResultDisplayが受信したデータ:", result);
@@ -50,19 +51,17 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
     }
     
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     
     img.onload = () => {
       // キャンバスのサイズを画像に合わせる
-      canvas.width = img.width;
-      canvas.height = img.height;
+      canvas.width = img.width || 800;
+      canvas.height = img.height || 600;
       
       // 画像を描画
       ctx.drawImage(img, 0, 0);
       
-      // 星座ラインを描画
       if (result.constellation_lines && result.constellation_lines.length > 0) {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)'; // 黄色
         ctx.lineWidth = 2;
         
         result.constellation_lines.forEach(line => {
@@ -71,25 +70,60 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
           ctx.lineTo(line.end.x, line.end.y);
           ctx.stroke();
         });
+        
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)'; // 赤色
+        ctx.lineWidth = 3; // 赤線は少し太く
+        
+        const selectedLength = Math.floor(result.constellation_lines.length / 3);
+        for (let i = 0; i < selectedLength; i++) {
+          const line = result.constellation_lines[i];
+          ctx.beginPath();
+          ctx.moveTo(line.start.x, line.start.y);
+          ctx.lineTo(line.end.x, line.end.y);
+          ctx.stroke();
+        }
       }
       
       // 星を描画
       if (result.stars && result.stars.length > 0) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         result.stars.forEach(star => {
           ctx.beginPath();
           ctx.arc(star.x, star.y, 3, 0, Math.PI * 2);
           ctx.fill();
         });
       }
+      
+      setImageLoaded(true);
+      setError(null);
     };
     
-    img.onerror = () => {
-      setError('画像の読み込みに失敗しました');
-      console.error('画像の読み込みエラー:', result.image_path);
+    img.onerror = (e) => {
+      console.error('画像の読み込みエラー:', result.image_path, e);
+      setError('画像の読み込みに失敗しました。サーバーから正しいパスが返されているか確認してください。');
+      
+      if (result.image_path) {
+        try {
+          let fallbackPath;
+          
+          if (result.image_path.startsWith('/api/') || result.image_path.startsWith('/static/')) {
+            fallbackPath = result.image_path;
+          } else {
+            const fileName = result.image_path.split('/').pop();
+            fallbackPath = `/api/images/${fileName}`;
+          }
+          
+          console.log('フォールバックパスを試行:', fallbackPath);
+          img.src = fallbackPath;
+        } catch (err) {
+          console.error('フォールバック画像の読み込みにも失敗:', err);
+        }
+      }
     };
     
+    console.log('画像の読み込みを試行:', result.image_path);
     img.src = result.image_path;
+    
   }, [result]);
   
   if (!result) {
@@ -125,6 +159,28 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
             display: 'block'
           }}
         />
+        
+        {/* 画像読み込み失敗時のフォールバック表示 */}
+        {!imageLoaded && result.image_path && (
+          <Box sx={{ 
+            p: 2, 
+            textAlign: 'center', 
+            color: '#aaa',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column'
+          }}>
+            <Typography variant="body2">
+              画像を読み込み中...
+            </Typography>
+          </Box>
+        )}
       </Box>
       
       <Typography variant="body1" sx={{ mt: 2, whiteSpace: 'pre-line' }}>
