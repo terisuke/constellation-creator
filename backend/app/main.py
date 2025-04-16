@@ -167,10 +167,23 @@ async def generate_constellation(
         print(f"受信した画像: {image.filename}")
 
         # 画像を一時ファイルとして保存
-        temp_image_path = f"temp_{image.filename}"
-        with open(temp_image_path, "wb") as buffer:
-            content = await image.read()
-            buffer.write(content)
+        content = await image.read()
+        print(f"受信した画像のサイズ: {len(content)} バイト")
+        print(f"画像のMIMEタイプ: {image.content_type}")
+        
+        is_valid = validate_image(content)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail="無効な画像形式です。JPG、PNG、AVIF、HEICなどの画像形式をお試しください。")
+        
+        try:
+            temp_image_path = save_uploaded_image(content, "/tmp")
+            print(f"画像を保存しました: {temp_image_path}")
+        except Exception as save_error:
+            print(f"画像の保存中にエラーが発生しました: {save_error}")
+            temp_image_path = f"/tmp/temp_{image.filename}"
+            with open(temp_image_path, "wb") as buffer:
+                buffer.write(content)
+            print(f"フォールバック: 画像を一時ファイルに保存しました: {temp_image_path}")
 
         # 画像処理とコンステレーション生成
         constellation_data = process_image_and_generate_constellation(temp_image_path, keyword)
