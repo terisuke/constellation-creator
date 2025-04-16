@@ -13,7 +13,9 @@ if not OPENAI_API_KEY:
 if OPENAI_API_KEY and OPENAI_API_KEY.startswith("sk-dummy"):
     logging.warning("ダミーのOpenAI APIキーが使用されています。モックレスポンスを返します。")
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = None
+if OPENAI_API_KEY:
+    client = OpenAI(api_key=OPENAI_API_KEY)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,8 +31,8 @@ def generate_constellation_name(keyword: str, language: str = "ja") -> str:
     Returns:
         生成された星座名
     """
-    if not OPENAI_API_KEY or (OPENAI_API_KEY and OPENAI_API_KEY.startswith("sk-dummy")):
-        logger.warning("ダミーのAPIキーが使用されています。モック星座名を返します。")
+    if not OPENAI_API_KEY or not client or (OPENAI_API_KEY and OPENAI_API_KEY.startswith("sk-dummy")):
+        logger.warning("APIキーが設定されていないか、ダミーのAPIキーが使用されています。モック星座名を返します。")
         
         mock_names = {
             "希望": "光明の星座",
@@ -88,8 +90,8 @@ def generate_constellation_story(name: str, keyword: str, language: str = "ja") 
     Returns:
         生成された星座のストーリー
     """
-    if not OPENAI_API_KEY or (OPENAI_API_KEY and OPENAI_API_KEY.startswith("sk-dummy")):
-        logger.warning("ダミーのAPIキーが使用されています。モック星座ストーリーを返します。")
+    if not OPENAI_API_KEY or not client or (OPENAI_API_KEY and OPENAI_API_KEY.startswith("sk-dummy")):
+        logger.warning("APIキーが設定されていないか、ダミーのAPIキーが使用されています。モック星座ストーリーを返します。")
         
         mock_stories = {
             "希望": f"古来より、{name}は希望の象徴とされてきました。暗闇の中で最も明るく輝くその星々は、困難な時代を生きる人々に勇気を与えてきたと言われています。伝説によれば、かつて大きな災害に見舞われた村があり、人々は絶望の淵にありました。しかしある夜、空に現れた{name}の光が人々の心に希望を灯し、村は再建への道を歩み始めたといいます。今でも、人生の岐路に立つ者が{name}を見上げると、新たな道が開けると信じられています。",

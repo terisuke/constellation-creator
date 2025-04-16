@@ -12,6 +12,68 @@ from app.core.image_processing import validate_image, save_uploaded_image, optim
 
 from app.services.openai_service import generate_constellation_name, generate_constellation_story
 
+def process_image_and_generate_constellation(image_path, keyword):
+    """
+    画像処理と星座生成を行う統合関数
+    
+    Args:
+        image_path: 処理する画像のパス
+        keyword: 星座生成に使用するキーワード
+        
+    Returns:
+        星座データを含む辞書
+    """
+    try:
+        with open(image_path, "rb") as f:
+            content = f.read()
+        
+        is_valid = validate_image(content)
+        if not is_valid:
+            raise ValueError("無効な画像形式です。JPG、PNG、AVIF、HEICなどの画像形式をお試しください。")
+        
+        try:
+            optimized_image_path = optimize_image(image_path)
+            print(f"画像を最適化しました: {optimized_image_path}")
+        except Exception as optimize_error:
+            print(f"画像の最適化中にエラーが発生しました: {optimize_error}")
+            optimized_image_path = image_path
+            print(f"最適化に失敗したため、元の画像を使用します: {image_path}")
+        
+        print(f"星検出を開始します: {optimized_image_path}")
+        constellation_points = get_constellation_points(optimized_image_path)
+        print(f"星検出が完了しました: {len(constellation_points)}個のクラスタを検出")
+        
+        print("星座の生成を開始します")
+        constellation_result = draw_constellation_lines(optimized_image_path, constellation_points)
+        constellation_image_path = constellation_result["image_path"]
+        constellation_data = constellation_result["constellation_data"]
+        print(f"星座の生成が完了しました: {constellation_image_path}")
+        
+        try:
+            print(f"星座名の生成を開始します: キーワード「{keyword}」")
+            name = generate_constellation_name(keyword)
+            print(f"星座名が生成されました: {name}")
+            
+            print("星座ストーリーの生成を開始します")
+            story = generate_constellation_story(name, keyword)
+            print("星座ストーリーが生成されました")
+        except Exception as openai_error:
+            print(f"OpenAI APIでのテキスト生成中にエラーが発生しました: {openai_error}")
+            name = "未知の星座"
+            story = "この星座の物語は古来より語り継がれてきましたが、詳細は時間の流れとともに失われてしまいました。"
+            print("エラー発生時のフォールバック: デフォルトの名前とストーリーを使用します")
+        
+        return {
+            "constellation_name": name,
+            "story": story,
+            "image_path": constellation_image_path,
+            "stars": constellation_data["stars"],
+            "constellation_lines": constellation_data["lines"]
+        }
+    except Exception as e:
+        print(f"画像処理と星座生成中にエラーが発生しました: {e}")
+        raise
+
 
 # 環境変数の読み込み
 load_dotenv()
