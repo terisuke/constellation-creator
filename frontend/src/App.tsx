@@ -157,11 +157,7 @@ function App() {
           {/* 結果表示 */}
           {result && !loading && (
             <ResultDisplay 
-              constellationName={result.constellation_name}
-              story={result.story}
-              imagePath={result.image_path}
-              stars={result.stars}
-              constellationLines={result.constellation_lines}
+              result={result}
             />
           )}
         </Paper>
@@ -170,4 +166,4 @@ function App() {
   )
 }
 
-export default App                                                                                                                                                            
+export default App                                                                                                                                                                                                                
