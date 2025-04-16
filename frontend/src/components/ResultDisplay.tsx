@@ -106,15 +106,25 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
         try {
           let fallbackPath;
           
-          if (result.image_path.startsWith('/api/') || result.image_path.startsWith('/static/')) {
-            fallbackPath = result.image_path;
-          } else {
+          if (result.image_path.startsWith('/static/')) {
+            const fileName = result.image_path.split('/').pop();
+            fallbackPath = `/api/images/${fileName}`;
+          } 
+          else if (result.image_path.startsWith('/api/images/')) {
+            const fileName = result.image_path.split('/').pop();
+            fallbackPath = `/static/images/${fileName}`;
+          }
+          else {
             const fileName = result.image_path.split('/').pop();
             fallbackPath = `/api/images/${fileName}`;
           }
           
-          console.log('フォールバックパスを試行:', fallbackPath);
-          img.src = fallbackPath;
+          if (fallbackPath !== result.image_path) {
+            console.log('フォールバックパスを試行:', fallbackPath);
+            img.src = fallbackPath;
+          } else {
+            console.error('フォールバックパスが元のパスと同じです。再試行しません。');
+          }
         } catch (err) {
           console.error('フォールバック画像の読み込みにも失敗:', err);
         }

@@ -160,12 +160,16 @@ async def generate_constellation(
         print(f"- ラインの数: {len(constellation_data.get('constellation_lines', []))}")
 
         constellation_image_path = constellation_data["image_path"]
-        static_image_filename = f"{os.path.basename(constellation_image_path)}"
+        static_image_filename = os.path.basename(constellation_image_path)
         static_image_path = f"static/images/{static_image_filename}"
         
-        shutil.copy(constellation_image_path, static_image_path)
+        try:
+            shutil.copy(constellation_image_path, static_image_path)
+            print(f"画像を静的ディレクトリにコピーしました: {static_image_path}")
+        except Exception as copy_error:
+            print(f"画像のコピー中にエラーが発生しました: {copy_error}")
         
-        image_url = f"/static/images/{static_image_filename}"
+        image_url = f"/api/images/{static_image_filename}"
         
         # レスポンスを返す前に形式を確認
         response_data = {
