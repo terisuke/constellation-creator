@@ -48,6 +48,7 @@ backend/__pycache__/
 *.log
 uploads/
 temp/
+backend/static/images/
 
 # Environment variables
 .envrc
