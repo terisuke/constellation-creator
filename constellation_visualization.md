@@ -2,16 +2,28 @@
 
 ## 概要
 
-現在の実装では、AIが認識した星座が画像のどの部分から予想したものかが視覚化されていない問題と、星座の説明欄の画像表示が常に生成ミスで非表示になる問題があります。これらの問題を解決するために、以下の改善を実装します。
+現在の実装では、以下の問題があります：
+1. AIが認識した星座が画像のどの部分から予想したものかが視覚化されていない
+2. 星座の説明欄の画像表示が常に生成ミスで非表示になる
+3. 生成AIで生成された星座と実際に検出された星のクラスタの間に意味的な関連付けがない
+
+これらの問題を解決するために、以下の改善を実装します。
 
 ## 問題点
 
 1. AIが認識した星座が画像のどの部分から予想したものかが視覚化されていない
-2. 星座の説明のすぐ上に画像アイコンが常に表示されているが、常に生成ミスで非表示
+2. 星座の説明欄の画像表示が常に生成ミスで非表示
+3. 生成AIで生成された星座と実際に検出された星のクラスタの間に意味的な関連付けがない
 
 ## 解決策
 
-アップされた画像にさらにレイヤーを重ねる形で星座を認識した星を白線で繋いだレイヤーを重ねて、星座の説明欄の画像表示欄で画面に表示する。
+1. アップされた画像にさらにレイヤーを重ねる形で星座を認識した星を白線で繋いだレイヤーを重ねて、星座の説明欄の画像表示欄で画面に表示する。
+
+2. 生成AIとクラスタの関連付け機能を実装する：
+   - 生成AIで生成された星座の特徴（形状、星の数、配置など）を解析
+   - 画像から検出された星のクラスタと、生成された星座の特徴をマッチング
+   - 最も適切なクラスタを選択して星座として表示
+   - 選択されたクラスタを強調表示し、他のクラスタは薄く表示
 
 ## 実装計画
 
@@ -84,6 +96,95 @@ def draw_constellation_lines(image_path, constellation_points, output_path=None)
     return output_path or image_path
 ```
 
+#### 3. 生成AIとクラスタの関連付け機能の実装
+
+`backend/app/core/constellation.py`に新しい関数を追加して、生成AIとクラスタの関連付けを行います。
+
+```python
+def match_constellation_with_clusters(constellation_name, constellation_story, clusters):
+    """
+    生成AIで生成された星座と検出された星のクラスタを関連付ける
+    
+    Args:
+        constellation_name: 生成された星座名
+        constellation_story: 生成された星座のストーリー
+        clusters: 検出された星のクラスタのリスト
+        
+    Returns:
+        最適なクラスタのインデックスと関連度スコア
+    """
+    # 星座名とストーリーから特徴を抽出
+    features = extract_constellation_features(constellation_name, constellation_story)
+    
+    # 各クラスタと特徴のマッチングスコアを計算
+    scores = []
+    for i, cluster in enumerate(clusters):
+        score = calculate_matching_score(features, cluster)
+        scores.append((i, score))
+    
+    # スコアが最も高いクラスタを選択
+    best_cluster_idx = max(scores, key=lambda x: x[1])[0]
+    
+    return best_cluster_idx, scores
+
+def extract_constellation_features(name, story):
+    """
+    星座名とストーリーから特徴を抽出する
+    
+    Args:
+        name: 星座名
+        story: 星座のストーリー
+        
+    Returns:
+        星座の特徴（形状、星の数、配置など）
+    """
+    # OpenAI APIを使用して特徴を抽出
+    # または、事前定義されたパターンから特徴を抽出
+    
+    # 仮の実装
+    return {
+        "shape": "irregular",  # 形状（regular, irregular, animal, objectなど）
+        "star_count": 5,       # 星の数
+        "brightness": "high",  # 明るさ（high, medium, low）
+        "pattern": "scattered" # パターン（scattered, dense, linearなど）
+    }
+
+def calculate_matching_score(features, cluster):
+    """
+    星座の特徴とクラスタのマッチングスコアを計算する
+    
+    Args:
+        features: 星座の特徴
+        cluster: 星のクラスタ
+        
+    Returns:
+        マッチングスコア（0-1の範囲）
+    """
+    # 特徴とクラスタの類似度を計算
+    
+    # 仮の実装
+    score = 0.5  # デフォルトスコア
+    
+    # 星の数の一致度
+    star_count_match = min(len(cluster) / features["star_count"], features["star_count"] / len(cluster))
+    score += star_count_match * 0.3
+    
+    # 明るさの一致度
+    avg_brightness = sum(star["brightness"] for star in cluster) / len(cluster)
+    if features["brightness"] == "high" and avg_brightness > 200:
+        score += 0.2
+    elif features["brightness"] == "medium" and 100 <= avg_brightness <= 200:
+        score += 0.2
+    elif features["brightness"] == "low" and avg_brightness < 100:
+        score += 0.2
+    
+    # パターンの一致度（簡易実装）
+    if features["pattern"] == "scattered" and len(cluster) >= 5:
+        score += 0.2
+    
+    return min(score, 1.0)
+```
+
 ### フロントエンド側の修正
 
 #### 1. 星座ライン表示コンポーネントの実装
@@ -111,6 +212,7 @@ interface ResultDisplayProps {
     image_path?: string;
     stars?: Star[];
     constellation_lines?: ConstellationLine[];
+    selected_cluster_index?: number; // 選択されたクラスタのインデックス
   };
 }
 
@@ -135,15 +237,31 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
       ctx.drawImage(img, 0, 0);
       
       // 星座ラインを描画
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      
-      result.constellation_lines.forEach(line => {
-        ctx.beginPath();
-        ctx.moveTo(line.start.x, line.start.y);
-        ctx.lineTo(line.end.x, line.end.y);
-        ctx.stroke();
-      });
+      if (result.selected_cluster_index !== undefined) {
+        // 選択されたクラスタのラインを強調表示
+        result.constellation_lines.forEach((line, index) => {
+          const isSelected = index === result.selected_cluster_index;
+          
+          ctx.strokeStyle = isSelected ? 'rgba(255, 0, 0, 0.8)' : 'rgba(255, 215, 0, 0.4)';
+          ctx.lineWidth = isSelected ? 3 : 1;
+          
+          ctx.beginPath();
+          ctx.moveTo(line.start.x, line.start.y);
+          ctx.lineTo(line.end.x, line.end.y);
+          ctx.stroke();
+        });
+      } else {
+        // すべてのラインを同じように表示
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
+        ctx.lineWidth = 2;
+        
+        result.constellation_lines.forEach(line => {
+          ctx.beginPath();
+          ctx.moveTo(line.start.x, line.start.y);
+          ctx.lineTo(line.end.x, line.end.y);
+          ctx.stroke();
+        });
+      }
       
       // 星の位置に点を描画
       ctx.fillStyle = 'white';
@@ -158,98 +276,45 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
   }, [result]);
   
   return (
-    <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        あなたの星座: {result.constellation_name}
-      </Typography>
+    <Box sx={{ mt: 4 }}>
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          {result.constellation_name}
+        </Typography>
+        <Typography variant="body1" paragraph>
+          {result.story}
+        </Typography>
+      </Paper>
       
       {result.image_path && (
-        <Box sx={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
-          <canvas 
-            ref={canvasRef} 
-            style={{ width: '100%', height: 'auto' }}
+        <Paper elevation={3} sx={{ p: 2, textAlign: 'center' }}>
+          <canvas
+            ref={canvasRef}
+            style={{ maxWidth: '100%', height: 'auto' }}
           />
-        </Box>
+        </Paper>
       )}
-      
-      <Typography variant="body1" sx={{ mt: 2 }}>
-        {result.story}
-      </Typography>
-    </Paper>
+    </Box>
   );
 };
 
 export default ResultDisplay;
 ```
 
-#### 2. 星座の説明欄の画像表示修正
-
-`frontend/src/App.tsx`の`handleSubmit`関数を修正して、APIレスポンスから星座ライン情報を取得し、`ResultDisplay`コンポーネントに渡すようにします。
-
-```tsx
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError(null);
-  
-  if (!image) {
-    setError('画像をアップロードしてください');
-    setLoading(false);
-    return;
-  }
-  
-  if (!keyword) {
-    setError('キーワードを入力してください');
-    setLoading(false);
-    return;
-  }
-  
-  const formData = new FormData();
-  formData.append('image', image);
-  formData.append('keyword', keyword);
-  
-  try {
-    const response = await axios.post('/api/generate-constellation', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    
-    setResult({
-      constellation_name: response.data.constellation_name,
-      story: response.data.story,
-      image_path: response.data.image_path,
-      stars: response.data.stars,
-      constellation_lines: response.data.constellation_lines,
-    });
-  } catch (error) {
-    console.error('Error generating constellation:', error);
-    setError('星座の生成中にエラーが発生しました。もう一度お試しください。');
-  } finally {
-    setLoading(false);
-  }
-};
-```
-
-## 期待される効果
-
-1. ユーザーはAIが認識した星座が画像のどの部分から予想したものかを視覚的に確認できるようになります。
-2. 星座の説明欄に正しく画像が表示されるようになります。
-3. ユーザー体験が向上し、アプリケーションの価値が高まります。
-
 ## 実装スケジュール
 
-1. バックエンド側の修正（1日）
-   - APIレスポンスの拡張
-   - 星座ライン描画機能の最適化
+1. バックエンド側の修正（2週間）
+   - APIレスポンスの拡張（3日）
+   - 星座ライン描画機能の最適化（4日）
+   - 生成AIとクラスタの関連付け機能の実装（7日）
 
-2. フロントエンド側の修正（1日）
-   - 星座ライン表示コンポーネントの実装
-   - 星座の説明欄の画像表示修正
+2. フロントエンド側の修正（1週間）
+   - 星座ライン表示コンポーネントの実装（3日）
+   - UIの調整とテスト（4日）
 
-3. テストとデバッグ（1日）
-   - 機能テスト
-   - エッジケースの確認
-   - パフォーマンス最適化
+3. 統合テストとデバッグ（1週間）
+   - エンドツーエンドテスト（3日）
+   - パフォーマンス最適化（2日）
+   - バグ修正（2日）
 
-合計: 3日間 
+合計: 4週間 

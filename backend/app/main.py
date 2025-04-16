@@ -46,6 +46,15 @@ def process_image_and_generate_constellation(image_path, keyword):
         constellation_points = get_constellation_points(optimized_image_path)
         print(f"星検出が完了しました: {len(constellation_points)}個のクラスタを検出")
         
+        # 星のクラスタを取得
+        stars = detect_stars(
+            optimized_image_path, 
+            use_adaptive_threshold=True, 
+            use_blob_detection=True
+        )
+        clusters = cluster_stars(stars, max_distance=50, min_stars=3, max_stars=12)
+        print(f"クラスタリングが完了しました: {len(clusters)}個のクラスタを形成")
+        
         print("星座の生成を開始します")
         constellation_result = draw_constellation_lines(optimized_image_path, constellation_points)
         constellation_image_path = constellation_result["image_path"]
@@ -60,10 +69,16 @@ def process_image_and_generate_constellation(image_path, keyword):
             print("星座ストーリーの生成を開始します")
             story = generate_constellation_story(name, keyword)
             print("星座ストーリーが生成されました")
+            
+            # TODO: 生成AIとクラスタの関連付け機能を実装
+            # 将来的に実装予定の機能
+            # selected_cluster_index = match_constellation_with_clusters(name, story, clusters)
+            selected_cluster_index = None
         except Exception as openai_error:
             print(f"OpenAI APIでのテキスト生成中にエラーが発生しました: {openai_error}")
             name = "未知の星座"
             story = "この星座の物語は古来より語り継がれてきましたが、詳細は時間の流れとともに失われてしまいました。"
+            selected_cluster_index = None
             print("エラー発生時のフォールバック: デフォルトの名前とストーリーを使用します")
         
         return {
@@ -71,7 +86,8 @@ def process_image_and_generate_constellation(image_path, keyword):
             "story": story,
             "image_path": constellation_image_path,
             "stars": constellation_data["stars"],
-            "constellation_lines": constellation_data["lines"]
+            "constellation_lines": constellation_data["lines"],
+            "selected_cluster_index": selected_cluster_index
         }
     except Exception as e:
         print(f"画像処理と星座生成中にエラーが発生しました: {e}")
@@ -185,7 +201,8 @@ async def generate_constellation(
             "story": constellation_data["story"],
             "image_path": image_url,
             "stars": constellation_data.get("stars", []),
-            "constellation_lines": constellation_data.get("constellation_lines", [])
+            "constellation_lines": constellation_data.get("constellation_lines", []),
+            "selected_cluster_index": constellation_data.get("selected_cluster_index", None)
         }
 
         print("APIレスポンス:", response_data)
