@@ -89,7 +89,16 @@ def process_image_and_generate_constellation(image_path, keyword):
         }
     except Exception as e:
         print(f"画像処理と星座生成中にエラーが発生しました: {e}")
-        raise
+        import traceback
+        traceback.print_exc()
+        return {
+            "constellation_name": "エラー",
+            "story": f"星座の生成中にエラーが発生しました: {str(e)}",
+            "image_path": None,
+            "stars": [],
+            "constellation_lines": [],
+            "selected_cluster_index": None
+        }
 
 
 # 環境変数の読み込み
