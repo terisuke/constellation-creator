@@ -498,10 +498,11 @@ def match_constellation_with_clusters(name: str, story: str, clusters: List[List
         clusters: 星のクラスタのリスト
         
     Returns:
-        最適なクラスタのインデックス、クラスタが空の場合はNone
+        最適なクラスタのインデックス、クラスタが空の場合でもデフォルト値0を返す
     """
     if not clusters:
-        return None
+        logger.warning("クラスタが空のため、デフォルトのクラスタインデックス0を返します")
+        return 0  # クラスタが空の場合でもデフォルト値を返す
         
     from app.services.openai_service import extract_constellation_features
     
@@ -518,7 +519,8 @@ def match_constellation_with_clusters(name: str, story: str, clusters: List[List
             scores.append((i, score))
         
         if not scores:
-            return None
+            logger.warning("スコアが計算できなかったため、デフォルトのクラスタインデックス0を返します")
+            return 0  # スコアが計算できない場合でもデフォルト値を返す
             
         selected_cluster_index = max(scores, key=lambda x: x[1])[0]
         logger.info(f"選択されたクラスタ: {selected_cluster_index}, スコア: {max(scores, key=lambda x: x[1])[1]}")
@@ -526,4 +528,5 @@ def match_constellation_with_clusters(name: str, story: str, clusters: List[List
         return selected_cluster_index
     except Exception as e:
         logger.error(f"クラスタマッチング中にエラーが発生しました: {e}")
-        return None
+        logger.warning("エラーが発生したため、デフォルトのクラスタインデックス0を返します")
+        return 0  # エラーが発生した場合でもデフォルト値を返す
