@@ -38,7 +38,7 @@ function App() {
     }
 
     try {
-      let formData = new FormData()
+      const formData = new FormData()
       formData.append('keyword', keyword)
       formData.append('image', image)
       
@@ -141,4 +141,4 @@ function App() {
   )
 }
 
-export default App                                                                                                        
+export default App                                                                                                                                                            

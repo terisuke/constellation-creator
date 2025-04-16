@@ -18,7 +18,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
   constellationLines
 }) => {
   const handleShare = () => {
-    console.log('共有機能は将来的に実装予定です');
   };
 
   const ConstellationCanvas: React.FC<{
