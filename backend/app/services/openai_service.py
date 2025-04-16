@@ -132,3 +132,93 @@ def generate_constellation_story(name: str, keyword: str, language: str = "ja") 
     except Exception as e:
         logger.error(f"星座ストーリーの生成中にエラーが発生しました: {e}")
         return f"{name}に関する伝説は古来より語り継がれてきましたが、詳細は時間の流れとともに失われてしまいました。"
+
+def extract_constellation_features(name: str, story: str) -> dict:
+    """
+    星座名とストーリーから特徴を抽出する
+    
+    Args:
+        name: 星座名
+        story: 星座のストーリー
+        
+    Returns:
+        星座の特徴（形状、星の数、配置など）
+    """
+    if not OPENAI_API_KEY or not client or (OPENAI_API_KEY and OPENAI_API_KEY.startswith("sk-dummy")):
+        logger.warning("APIキーが設定されていないか、ダミーのAPIキーが使用されています。モック特徴を返します。")
+        return {
+            "shape": "irregular",
+            "star_count": 5,
+            "brightness": "high",
+            "pattern": "scattered"
+        }
+    
+    try:
+        prompt = f"""
+        以下の星座名とストーリーから、星座の特徴を抽出してください。
+        
+        星座名: {name}
+        ストーリー: {story}
+        
+        以下の形式で特徴を抽出してください：
+        - 形状（shape）: regular, irregular, animal, object など
+        - 星の数（star_count）: おおよその数（5-15の数値）
+        - 明るさ（brightness）: high, medium, low のいずれか
+        - パターン（pattern）: scattered, dense, linear のいずれか
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "あなたは星座の特徴を抽出するAIアシスタントです。与えられた星座名とストーリーから、星座の形状、星の数、明るさ、パターンなどの特徴を抽出します。"},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200
+        )
+        
+        feature_text = response.choices[0].message.content.strip()
+        logger.info(f"抽出された特徴テキスト: {feature_text}")
+        
+        features = {
+            "shape": "irregular",
+            "star_count": 5,
+            "brightness": "high",
+            "pattern": "scattered"
+        }
+        
+        if "regular" in feature_text.lower():
+            features["shape"] = "regular"
+        elif "animal" in feature_text.lower():
+            features["shape"] = "animal"
+        elif "object" in feature_text.lower():
+            features["shape"] = "object"
+            
+        if "linear" in feature_text.lower():
+            features["pattern"] = "linear"
+        elif "dense" in feature_text.lower():
+            features["pattern"] = "dense"
+            
+        if "低い" in feature_text.lower() or "low" in feature_text.lower():
+            features["brightness"] = "low"
+        elif "中程度" in feature_text.lower() or "medium" in feature_text.lower():
+            features["brightness"] = "medium"
+            
+        import re
+        numbers = re.findall(r'\d+', feature_text)
+        if numbers:
+            for num in numbers:
+                n = int(num)
+                if 3 <= n <= 20:  # 星の数として妥当な範囲
+                    features["star_count"] = n
+                    break
+                    
+        logger.info(f"解析された特徴: {features}")
+        return features
+    except Exception as e:
+        logger.error(f"星座特徴の抽出中にエラーが発生しました: {e}")
+        return {
+            "shape": "irregular",
+            "star_count": 5,
+            "brightness": "high",
+            "pattern": "scattered"
+        }

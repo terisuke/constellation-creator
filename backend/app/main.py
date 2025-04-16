@@ -9,7 +9,7 @@ import logging
 import os
 import shutil
 
-from app.core.star_detection import get_constellation_points
+from app.core.star_detection import get_constellation_points, detect_stars, cluster_stars, match_constellation_with_clusters
 from app.core.constellation import draw_constellation_lines
 from app.core.image_processing import validate_image, save_uploaded_image, optimize_image
 
@@ -70,10 +70,9 @@ def process_image_and_generate_constellation(image_path, keyword):
             story = generate_constellation_story(name, keyword)
             print("星座ストーリーが生成されました")
             
-            # TODO: 生成AIとクラスタの関連付け機能を実装
-            # 将来的に実装予定の機能
-            # selected_cluster_index = match_constellation_with_clusters(name, story, clusters)
-            selected_cluster_index = None
+            from app.core.star_detection import match_constellation_with_clusters
+            selected_cluster_index = match_constellation_with_clusters(name, story, clusters)
+            print(f"選択されたクラスタインデックス: {selected_cluster_index}")
         except Exception as openai_error:
             print(f"OpenAI APIでのテキスト生成中にエラーが発生しました: {openai_error}")
             name = "未知の星座"

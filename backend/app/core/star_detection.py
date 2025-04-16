@@ -423,3 +423,107 @@ def get_constellation_points(image_path: str, min_stars: int = 3,
         constellation_points = default_points
     
     return constellation_points
+
+def calculate_matching_score(features: dict, cluster: list) -> float:
+    """
+    星座の特徴とクラスタのマッチングスコアを計算する
+    
+    Args:
+        features: 星座の特徴
+        cluster: 星のクラスタ
+        
+    Returns:
+        マッチングスコア（0-1の範囲）
+    """
+    score = 0.0
+    
+    star_count_match = min(len(cluster) / features["star_count"], 
+                          features["star_count"] / len(cluster))
+    score += star_count_match * 0.3
+    
+    avg_brightness = sum(star["brightness"] for star in cluster) / len(cluster)
+    if features["brightness"] == "high" and avg_brightness > 200:
+        score += 0.2
+    elif features["brightness"] == "medium" and 100 <= avg_brightness <= 200:
+        score += 0.2
+    elif features["brightness"] == "low" and avg_brightness < 100:
+        score += 0.2
+    
+    if features["pattern"] == "scattered":
+        xs = [star["x"] for star in cluster]
+        ys = [star["y"] for star in cluster]
+        if len(cluster) >= 5 and np.std(xs) > 50 and np.std(ys) > 50:
+            score += 0.2
+    elif features["pattern"] == "linear":
+        xs = [star["x"] for star in cluster]
+        ys = [star["y"] for star in cluster]
+        if len(cluster) >= 3:
+            try:
+                from sklearn.linear_model import LinearRegression
+                X = np.array(xs).reshape(-1, 1)
+                y = np.array(ys)
+                model = LinearRegression().fit(X, y)
+                r2 = model.score(X, y)
+                if r2 > 0.7:  # R^2が0.7以上なら線形と見なす
+                    score += 0.2
+            except:
+                if len(cluster) >= 3:
+                    x1, y1 = xs[0], ys[0]
+                    x2, y2 = xs[-1], ys[-1]
+                    distances = []
+                    for i in range(1, len(xs) - 1):
+                        numerator = abs((y2-y1)*xs[i] - (x2-x1)*ys[i] + x2*y1 - y2*x1)
+                        denominator = ((y2-y1)**2 + (x2-x1)**2)**0.5
+                        distance = numerator / denominator if denominator != 0 else 0
+                        distances.append(distance)
+                    if sum(distances) / len(distances) < 20:  # 平均距離が小さければ線形と見なす
+                        score += 0.2
+    elif features["pattern"] == "dense":
+        if len(cluster) >= 5:
+            xs = [star["x"] for star in cluster]
+            ys = [star["y"] for star in cluster]
+            if np.std(xs) < 30 and np.std(ys) < 30:
+                score += 0.2
+    
+    
+    return min(score, 1.0)
+
+def match_constellation_with_clusters(name: str, story: str, clusters: List[List[Dict[str, Any]]]) -> Optional[int]:
+    """
+    星座名とストーリーから最適なクラスタを選択する
+    
+    Args:
+        name: 星座名
+        story: 星座のストーリー
+        clusters: 星のクラスタのリスト
+        
+    Returns:
+        最適なクラスタのインデックス、クラスタが空の場合はNone
+    """
+    if not clusters:
+        return None
+        
+    from app.services.openai_service import extract_constellation_features
+    
+    try:
+        features = extract_constellation_features(name, story)
+        
+        scores = []
+        for i, cluster in enumerate(clusters):
+            if len(cluster) < 3:  # 最低3つの星が必要
+                scores.append((i, 0.0))
+                continue
+                
+            score = calculate_matching_score(features, cluster)
+            scores.append((i, score))
+        
+        if not scores:
+            return None
+            
+        selected_cluster_index = max(scores, key=lambda x: x[1])[0]
+        logger.info(f"選択されたクラスタ: {selected_cluster_index}, スコア: {max(scores, key=lambda x: x[1])[1]}")
+        
+        return selected_cluster_index
+    except Exception as e:
+        logger.error(f"クラスタマッチング中にエラーが発生しました: {e}")
+        return None

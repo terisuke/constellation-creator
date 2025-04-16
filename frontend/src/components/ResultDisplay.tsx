@@ -18,6 +18,7 @@ interface ResultDisplayProps {
     image_path?: string;
     stars?: Star[];
     constellation_lines?: ConstellationLine[];
+    selected_cluster_index?: number;
   };
 }
 
@@ -61,8 +62,8 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
       ctx.drawImage(img, 0, 0);
       
       if (result.constellation_lines && result.constellation_lines.length > 0) {
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)'; // 黄色
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)'; // 黄色（薄く）
+        ctx.lineWidth = 1;
         
         result.constellation_lines.forEach(line => {
           ctx.beginPath();
@@ -72,15 +73,19 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
         });
         
         ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)'; // 赤色
-        ctx.lineWidth = 3; // 赤線は少し太く
+        ctx.lineWidth = 3; // 赤線は太く
         
-        const selectedLength = Math.floor(result.constellation_lines.length / 3);
-        for (let i = 0; i < selectedLength; i++) {
-          const line = result.constellation_lines[i];
-          ctx.beginPath();
-          ctx.moveTo(line.start.x, line.start.y);
-          ctx.lineTo(line.end.x, line.end.y);
-          ctx.stroke();
+        if (result.selected_cluster_index !== undefined && result.selected_cluster_index !== null) {
+          const selectedLines = result.constellation_lines.filter((_, i) => 
+            Math.floor(i / 2) === result.selected_cluster_index
+          );
+          
+          selectedLines.forEach(line => {
+            ctx.beginPath();
+            ctx.moveTo(line.start.x, line.start.y);
+            ctx.lineTo(line.end.x, line.end.y);
+            ctx.stroke();
+          });
         }
       }
       
