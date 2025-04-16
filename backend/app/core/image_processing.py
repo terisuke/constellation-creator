@@ -112,7 +112,8 @@ def save_uploaded_image(file_content: bytes, output_dir: str = "/tmp") -> str:
     output_path = os.path.join(output_dir, filename)
     
     try:
-        image = Image.open(io.BytesIO(file_content))
+        image_bytes = io.BytesIO(file_content)
+        image = Image.open(image_bytes)
         # RGBモードに変換（透過画像の場合に対応）
         if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
             image = image.convert('RGB')
@@ -157,6 +158,16 @@ def save_uploaded_image(file_content: bytes, output_dir: str = "/tmp") -> str:
     except Exception as im_error:
         logger.warning(f"ImageMagickでの処理中にエラーが発生しました: {im_error}")
     
+    try:
+        with open(output_path, 'wb') as f:
+            f.write(file_content)
+        
+        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+            logger.info(f"単純なファイル書き込みで画像を保存しました: {output_path}")
+            return output_path
+    except Exception as write_error:
+        logger.warning(f"ファイル書き込みでの保存に失敗しました: {write_error}")
+        
     logger.error("すべての方法で画像の保存に失敗しました")
     raise ValueError("画像の保存に失敗しました。別の画像を試してください。")
 
