@@ -8,8 +8,8 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "start": "concurrently \"npm run dev\" \"cd ../backend && source venv/bin/activate && python -m uvicorn app.main:app --reload\"",
-    "update-deps": "npm install && cd ../backend && source venv/bin/activate && pip install -r requirements.txt"
+    "start": "concurrently \"npm run dev\" \"cd ../backend && . venv/bin/activate && python -m uvicorn app.main:app --reload\"",
+    "update-deps": "npm install && cd ../backend && . venv/bin/activate && pip install -r requirements.txt"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
