@@ -30,20 +30,28 @@ function App() {
     setError(null)
 
     try {
-      const formData = new FormData()
-      formData.append('keyword', keyword)
+      let response;
       
       if (image) {
+        const formData = new FormData()
+        formData.append('keyword', keyword)
         formData.append('image', image)
-      } else {
-        formData.append('generate_image', 'true')
-      }
 
-      const response = await axios.post('/api/generate-constellation', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+        response = await axios.post('/api/generate-constellation', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      } else {
+        response = await axios.post('/api/generate-constellation', {
+          keyword: keyword,
+          generate_image: true
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      }
 
       setResult(response.data)
     } catch (error) {
@@ -136,4 +144,4 @@ function App() {
   )
 }
 
-export default App  
+export default App            
