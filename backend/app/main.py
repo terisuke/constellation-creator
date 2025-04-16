@@ -70,7 +70,6 @@ def process_image_and_generate_constellation(image_path, keyword):
             story = generate_constellation_story(name, keyword)
             print("星座ストーリーが生成されました")
             
-            from app.core.star_detection import match_constellation_with_clusters
             selected_cluster_index = match_constellation_with_clusters(name, story, clusters)
             print(f"選択されたクラスタインデックス: {selected_cluster_index}")
         except Exception as openai_error:
