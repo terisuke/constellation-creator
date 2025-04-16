@@ -11,7 +11,18 @@ AIがあなたの"今夜だけの星座"を作るWebアプリケーション
 - 星空画像のアップロード
 - 星の自動検出と星座の生成
 - キーワードに基づく星座名とストーリーの自動生成
+- 生成された星座と検出された星のクラスタの関連付け
 - 生成結果の保存と共有
+
+### 実装予定の機能
+
+- 生成AIとクラスタの関連付け機能
+  - 生成された星座の特徴解析
+  - 検出された星のクラスタとのマッチング
+  - 最適なクラスタの選択と視覚化
+- 星座の視覚化機能の改善
+  - 選択されたクラスタの強調表示
+  - 星座ラインの描画最適化
 
 ## 技術スタック
 
@@ -86,6 +97,10 @@ SECRET_KEY=your_secret_key
 ├── frontend/                     # フロントエンド（React + TypeScript + Vite）
 │   ├── src/                      # ソースコード
 │   │   ├── components/           # Reactコンポーネント
+│   │   │   ├── ImageUploader.tsx # 画像アップロードコンポーネント
+│   │   │   ├── KeywordInput.tsx  # キーワード入力コンポーネント
+│   │   │   ├── ResultDisplay.tsx # 結果表示コンポーネント
+│   │   │   └── LoadingIndicator.tsx # ローディング表示コンポーネント
 │   │   ├── App.tsx               # メインアプリケーションコンポーネント
 │   │   └── main.tsx              # エントリーポイント
 │   └── ...
@@ -93,11 +108,20 @@ SECRET_KEY=your_secret_key
 ├── backend/                      # バックエンド（Python + FastAPI）
 │   ├── app/                      # アプリケーションコード
 │   │   ├── core/                 # コア機能
+│   │   │   ├── star_detection.py # 星検出ロジック
+│   │   │   ├── constellation.py  # 星座生成ロジック
+│   │   │   └── image_processing.py # 画像処理
 │   │   ├── services/             # 外部サービス連携
+│   │   │   └── openai_service.py # OpenAI API連携
 │   │   └── main.py               # アプリケーションエントリーポイント
 │   ├── tests/                    # テスト
+│   │   ├── test_avif_support.py  # AVIFサポートテスト
+│   │   ├── test_image_processing.py # 画像処理テスト
+│   │   └── test_improved_star_detection.py # 星検出テスト
 │   └── ...
 │
+├── constellation_visualization.md # 星座の視覚化機能の実装計画
+├── ROADMAP.md                    # プロジェクトロードマップ
 └── ...
 ```
 
