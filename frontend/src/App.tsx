@@ -10,8 +10,8 @@ import { useState } from 'react'
 
 import ImageUploader from './components/ImageUploader.tsx'
 import KeywordInput from './components/KeywordInput.tsx'
-import ResultDisplay from './components/ResultDisplay.tsx'
 import LoadingIndicator from './components/LoadingIndicator.tsx'
+import ResultDisplay from './components/ResultDisplay.tsx'
 
 function App() {
   const [keyword, setKeyword] = useState('')
@@ -27,35 +27,64 @@ function App() {
   } | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
     if (!image) {
-      setError('星座を生成するには画像をアップロードしてください。')
-      setLoading(false)
-      return
+      setError('画像をアップロードしてください');
+      setLoading(false);
+      return;
     }
-
+    
+    if (!keyword) {
+      setError('キーワードを入力してください');
+      setLoading(false);
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('image', image);
+    formData.append('keyword', keyword);
+    
     try {
-      const formData = new FormData()
-      formData.append('keyword', keyword)
-      formData.append('image', image)
+      console.log('Submitting constellation generation request...');
       
       const response = await axios.post('/api/generate-constellation', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      })
-
-      setResult(response.data)
+      });
+      
+      console.log('Received API response:', response.data);
+      
+      if (!response.data.image_path) {
+        console.warn('No image path in response');
+        setError('画像の生成に失敗しました');
+        return;
+      }
+      
+      if (!response.data.stars || !response.data.constellation_lines) {
+        console.warn('No stars or constellation lines in response');
+      }
+      
+      setResult({
+        constellation_name: response.data.constellation_name,
+        story: response.data.story,
+        image_path: response.data.image_path,
+        stars: response.data.stars || [],
+        constellation_lines: response.data.constellation_lines || [],
+      });
+      
+      console.log('State updated with result:', result);
+      
     } catch (error) {
-      console.error('Error:', error)
-      setError('星座の生成中にエラーが発生しました。もう一度お試しください。')
+      console.error('Error generating constellation:', error);
+      setError('星座の生成中にエラーが発生しました。もう一度お試しください。');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Container maxWidth="md">

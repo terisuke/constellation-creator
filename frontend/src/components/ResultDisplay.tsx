@@ -1,133 +1,136 @@
-import React from 'react';
-import { Box, Typography, Paper, Button } from '@mui/material';
-import ShareIcon from '@mui/icons-material/Share';
+import { Box, Paper, Typography } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
 
-interface ResultDisplayProps {
-  constellationName: string;
-  story: string;
-  imagePath?: string;
-  stars?: Array<{x: number, y: number}>;
-  constellationLines?: Array<{start: {x: number, y: number}, end: {x: number, y: number}}>;
+interface Star {
+  x: number;
+  y: number;
 }
 
-const ResultDisplay: React.FC<ResultDisplayProps> = ({ 
-  constellationName, 
-  story,
-  imagePath,
-  stars,
-  constellationLines
-}) => {
-  const handleShare = () => {
-  };
+interface ConstellationLine {
+  start: Star;
+  end: Star;
+}
 
-  const ConstellationCanvas: React.FC<{
-    imagePath: string;
-    stars?: Array<{x: number, y: number}>;
-    constellationLines?: Array<{start: {x: number, y: number}, end: {x: number, y: number}}>;
-    alt: string;
-  }> = ({ imagePath, stars, constellationLines, alt }) => {
-    const canvasRef = React.useRef<HTMLCanvasElement>(null);
-    const [loaded, setLoaded] = React.useState(false);
+interface ResultDisplayProps {
+  result: {
+    constellation_name: string;
+    story: string;
+    image_path?: string;
+    stars?: Star[];
+    constellation_lines?: ConstellationLine[];
+  };
+}
+
+const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    console.log("ResultDisplayが受信したデータ:", result);
+    if (!result) {
+      console.error("結果データが存在しません");
+      return;
+    }
     
-    React.useEffect(() => {
-      const img = new Image();
-      img.src = imagePath;
-      img.onload = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        
-        ctx.drawImage(img, 0, 0);
-        
-        if (constellationLines && constellationLines.length > 0) {
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-          ctx.lineWidth = 2;
-          
-          constellationLines.forEach(line => {
-            ctx.beginPath();
-            ctx.moveTo(line.start.x, line.start.y);
-            ctx.lineTo(line.end.x, line.end.y);
-            ctx.stroke();
-          });
-        }
-        
-        if (stars && stars.length > 0) {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-          
-          stars.forEach(star => {
-            ctx.beginPath();
-            ctx.arc(star.x, star.y, 3, 0, Math.PI * 2);
-            ctx.fill();
-          });
-        }
-        
-        setLoaded(true);
-      };
-    }, [imagePath, stars, constellationLines]);
+    if (!result.image_path) {
+      console.warn('画像パスが提供されていません');
+      return;
+    }
     
-    return (
-      <>
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      console.warn('キャンバスが見つかりません');
+      return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.warn('キャンバスコンテキストを取得できません');
+      return;
+    }
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      // キャンバスのサイズを画像に合わせる
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // 画像を描画
+      ctx.drawImage(img, 0, 0);
+      
+      // 星座ラインを描画
+      if (result.constellation_lines && result.constellation_lines.length > 0) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 2;
+        
+        result.constellation_lines.forEach(line => {
+          ctx.beginPath();
+          ctx.moveTo(line.start.x, line.start.y);
+          ctx.lineTo(line.end.x, line.end.y);
+          ctx.stroke();
+        });
+      }
+      
+      // 星を描画
+      if (result.stars && result.stars.length > 0) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        result.stars.forEach(star => {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+    };
+    
+    img.onerror = () => {
+      setError('画像の読み込みに失敗しました');
+      console.error('画像の読み込みエラー:', result.image_path);
+    };
+    
+    img.src = result.image_path;
+  }, [result]);
+  
+  if (!result) {
+    return <div className="text-red-500">データが見つかりません</div>;
+  }
+
+  return (
+    <Paper elevation={3} sx={{ p: 3, mt: 3, backgroundColor: '#1a1a1a', color: '#ffffff' }}>
+      <Typography variant="h5" gutterBottom sx={{ color: '#4a90e2' }}>
+        生成された星座: {result.constellation_name}
+      </Typography>
+      
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
+      
+      <Box sx={{ 
+        position: 'relative', 
+        width: '100%', 
+        maxWidth: '800px', 
+        margin: '0 auto',
+        backgroundColor: '#000',
+        borderRadius: '4px',
+        overflow: 'hidden'
+      }}>
         <canvas 
           ref={canvasRef} 
           style={{ 
-            maxWidth: '100%', 
-            borderRadius: '4px',
-            display: loaded ? 'block' : 'none' 
+            width: '100%', 
+            height: 'auto',
+            display: 'block'
           }}
         />
-        {!loaded && (
-          <img 
-            src={imagePath} 
-            alt={alt} 
-            style={{ maxWidth: '100%', borderRadius: '4px' }} 
-          />
-        )}
-      </>
-    );
-  };
-
-  return (
-    <Box sx={{ mt: 4 }}>
-      <Paper sx={{ 
-        p: 3, 
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '8px',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
-      }}>
-        <Typography variant="h5" gutterBottom sx={{ color: '#4a90e2' }}>
-          生成された星座: {constellationName}
-        </Typography>
-        
-        {imagePath && (
-          <Box sx={{ my: 2, textAlign: 'center', position: 'relative' }}>
-            <ConstellationCanvas 
-              imagePath={imagePath}
-              stars={stars}
-              constellationLines={constellationLines}
-              alt={constellationName}
-            />
-          </Box>
-        )}
-        
-        <Typography variant="body1" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
-          {story}
-        </Typography>
-        
-        <Button 
-          startIcon={<ShareIcon />}
-          onClick={handleShare}
-          variant="outlined"
-          sx={{ mt: 2 }}
-        >
-          共有する
-        </Button>
-      </Paper>
-    </Box>
+      </Box>
+      
+      <Typography variant="body1" sx={{ mt: 2, whiteSpace: 'pre-line' }}>
+        {result.story}
+      </Typography>
+    </Paper>
   );
 };
 
