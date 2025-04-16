@@ -75,10 +75,14 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
         ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)'; // 赤色
         ctx.lineWidth = 3; // 赤線は太く
         
+        console.log("選択されたクラスタインデックス:", result.selected_cluster_index);
+        
         if (result.selected_cluster_index !== undefined && result.selected_cluster_index !== null) {
           const selectedLines = result.constellation_lines.filter((_, i) => 
-            Math.floor(i / 2) === result.selected_cluster_index
+            Math.floor(i / 3) === result.selected_cluster_index
           );
+          
+          console.log("選択された線の数:", selectedLines.length);
           
           selectedLines.forEach(line => {
             ctx.beginPath();
