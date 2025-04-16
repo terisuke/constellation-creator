@@ -11,7 +11,6 @@ from app.core.constellation import draw_constellation_lines
 from app.core.image_processing import validate_image, save_uploaded_image, optimize_image
 
 from app.services.openai_service import generate_constellation_name, generate_constellation_story
-from app.services.stable_diffusion import generate_starry_image
 
 
 # 環境変数の読み込み
@@ -41,7 +40,6 @@ app.add_middleware(
 
 class ConstellationRequest(BaseModel):
     keyword: str
-    generate_image: bool = False
 
 
 @app.get("/")
@@ -57,22 +55,14 @@ async def health_check():
 @app.post("/api/generate-constellation")
 async def generate_constellation(
     keyword: str = Form(...),
-    generate_image: str = Form('false'),
-    image: Optional[UploadFile] = File(None)
+    image: UploadFile = File(...)
 ):
     try:
-        # 画像処理（アップロードまたは生成）
-        if image:
-            content = await image.read()
-            if not validate_image(content):
-                raise HTTPException(status_code=400, detail="無効な画像形式です")
-            image_path = save_uploaded_image(content)
-            optimized_image_path = optimize_image(image_path)
-        elif generate_image.lower() == 'true':
-            image_path = generate_starry_image(keyword)
-            optimized_image_path = image_path
-        else:
-            raise HTTPException(status_code=400, detail="画像が提供されていません")
+        content = await image.read()
+        if not validate_image(content):
+            raise HTTPException(status_code=400, detail="無効な画像形式です")
+        image_path = save_uploaded_image(content)
+        optimized_image_path = optimize_image(image_path)
             
         constellation_points = get_constellation_points(optimized_image_path)
         

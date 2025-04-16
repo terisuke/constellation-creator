@@ -65,9 +65,6 @@ uvicorn app.main:app --reload
 # OpenAI API設定
 OPENAI_API_KEY=your_openai_api_key
 
-# Stable Diffusion API設定
-STABLE_DIFFUSION_API_KEY=your_stable_diffusion_api_key
-
 # データベース設定
 DATABASE_URL=postgresql://user:password@localhost:5432/constellation_db
 
@@ -77,4 +74,4 @@ SECRET_KEY=your_secret_key
 
 ## ライセンス
 
-MIT License  
+MIT License    

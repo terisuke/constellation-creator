@@ -21,8 +21,6 @@
 - OpenAI GPT-4 API
   - 星座名生成
   - 星座ストーリー生成
-- Stable Diffusion API
-  - 星空画像の生成
 
 ## 画像処理機能
 - OpenCV
@@ -38,9 +36,6 @@
 ```
 # OpenAI API設定
 OPENAI_API_KEY=your_openai_api_key
-
-# Stable Diffusion API設定
-STABLE_DIFFUSION_API_KEY=your_stable_diffusion_api_key
 
 # データベース設定
 DATABASE_URL=postgresql://user:password@localhost:5432/constellation_db

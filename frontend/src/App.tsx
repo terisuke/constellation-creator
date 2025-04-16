@@ -29,20 +29,18 @@ function App() {
     setLoading(true)
     setError(null)
 
+    if (!image) {
+      setError('星座を生成するには画像をアップロードしてください。')
+      setLoading(false)
+      return
+    }
+
     try {
-      let response;
-      
       let formData = new FormData()
       formData.append('keyword', keyword)
+      formData.append('image', image)
       
-      if (image) {
-        formData.append('image', image)
-        formData.append('generate_image', 'false')
-      } else {
-        formData.append('generate_image', 'true')
-      }
-      
-      response = await axios.post('/api/generate-constellation', formData, {
+      const response = await axios.post('/api/generate-constellation', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -139,4 +137,4 @@ function App() {
   )
 }
 
-export default App                        
+export default App                          
