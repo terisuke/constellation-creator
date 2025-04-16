@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 from typing import Optional, Union
 from dotenv import load_dotenv
@@ -119,7 +119,10 @@ app = FastAPI(
 # CORS設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # フロントエンドの開発サーバー
+    allow_origins=[
+        "http://localhost:5173",  # フロントエンドの開発サーバー
+        "https://constellation-creator-639959525777.asia-northeast1.run.app",  # Cloud Runのドメイン
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -127,16 +130,23 @@ app.add_middleware(
 
 os.makedirs("static/images", exist_ok=True)
 
+# 静的ファイルの設定
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
 
 
 class ConstellationRequest(BaseModel):
     keyword: str
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return {"message": "星AI API へようこそ！"}
+    """フロントエンドのHTMLファイルを返す"""
+    try:
+        with open("static/index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return {"message": "星AI API へようこそ！"}
 
 
 @app.get("/health")

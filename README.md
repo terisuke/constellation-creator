@@ -67,6 +67,14 @@ AIがあなたの"今夜だけの星座"を作るWebアプリケーション
 - NumPy
 - Pillow
 
+## デプロイ情報
+
+アプリケーションはGoogle Cloud Runにデプロイされています。
+
+- 本番環境URL: https://constellation-creator-639959525777.asia-northeast1.run.app
+- リージョン: asia-northeast1
+- プロジェクトID: aipartner-426616
+
 ## 開発環境のセットアップ
 
 ### 必要条件

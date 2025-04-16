@@ -1,0 +1,26 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/constellation-creator/app:latest', '.']
+
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/constellation-creator/app:latest']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'constellation-creator'
+      - '--image'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/constellation-creator/app:latest'
+      - '--region'
+      - 'asia-northeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/constellation-creator/app:latest' 

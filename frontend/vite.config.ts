@@ -8,9 +8,14 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://constellation-creator-639959525777.asia-northeast1.run.app',
         changeOrigin: true,
       },
     },
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true,
   },
 }) 

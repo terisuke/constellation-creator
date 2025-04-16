@@ -1,29 +1,31 @@
-export const generateConstellation = async (
-  keyword: string,
-  image: File
-): Promise<ConstellationResponse> => {
+import axios from 'axios';
+
+const API_BASE_URL = 'https://constellation-creator-639959525777.asia-northeast1.run.app';
+
+export interface ConstellationResponse {
+  name: string;
+  story: string;
+  image_path: string;
+  stars: Array<[number, number]>;
+  constellation_lines: Array<[number, number]>;
+  selected_cluster_index: number;
+}
+
+export const generateConstellation = async (image: File, keyword: string): Promise<ConstellationResponse> => {
   try {
-    console.log("APIリクエスト開始 - パラメータ:", { keyword, image });
-
     const formData = new FormData();
-    formData.append("keyword", keyword);
-    formData.append("image", image);
+    formData.append('image', image);
+    formData.append('keyword', keyword);
 
-    const response = await fetch("/api/generate-constellation", {
-      method: "POST",
-      body: formData,
+    const response = await axios.post<ConstellationResponse>(`${API_BASE_URL}/api/generate-constellation`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
 
-    if (!response.ok) {
-      console.error("APIエラー:", response.status, response.statusText);
-      throw new Error(`APIエラー: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("API応答データ:", data);
-    return data;
+    return response.data;
   } catch (error) {
-    console.error("API呼び出し中にエラーが発生:", error);
-    throw error;
+    console.error('星座生成APIエラー:', error);
+    throw new Error('星座の生成中にエラーが発生しました。');
   }
 }; 
