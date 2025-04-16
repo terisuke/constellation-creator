@@ -12,11 +12,6 @@
 │   │   │   ├── KeywordInput.tsx  # キーワード入力コンポーネント
 │   │   │   ├── ResultDisplay.tsx # 結果表示コンポーネント
 │   │   │   └── LoadingIndicator.tsx # ローディング表示コンポーネント
-│   │   ├── services/             # APIサービス
-│   │   │   └── api.ts            # バックエンドAPIとの通信
-│   │   ├── types/                # 型定義
-│   │   │   └── index.ts          # 共通型定義
-│   │   ├── utils/                # ユーティリティ関数
 │   │   ├── App.tsx               # メインアプリケーションコンポーネント
 │   │   └── main.tsx              # エントリーポイント
 │   ├── index.html                # HTMLテンプレート
@@ -26,18 +21,17 @@
 │
 ├── backend/                      # バックエンド（Python + FastAPI）
 │   ├── app/                      # アプリケーションコード
-│   │   ├── api/                  # APIエンドポイント
-│   │   │   └── routes/           # ルート定義
 │   │   ├── core/                 # コア機能
 │   │   │   ├── star_detection.py # 星検出ロジック
 │   │   │   ├── constellation.py  # 星座生成ロジック
 │   │   │   └── image_processing.py # 画像処理
 │   │   ├── services/             # 外部サービス連携
-│   │   │   ├── openai_service.py # OpenAI API連携
-│   │   │   └── stable_diffusion.py # Stable Diffusion API連携
-│   │   ├── utils/                # ユーティリティ
-│   │   └── main.py               # アプリケーションエントリーポイント
+│   │   │   └── openai_service.py # OpenAI API連携
+│   │   └── main.py               # アプリケーションエントリーポイント（APIエンドポイントを含む）
 │   ├── tests/                    # テスト
+│   ├── test_avif_support.py      # AVIFサポートテスト
+│   ├── test_image_processing.py  # 画像処理テスト
+│   ├── test_improved_star_detection.py # 星検出テスト
 │   ├── .env                      # 環境変数
 │   └── requirements.txt          # 依存関係
 │
@@ -49,6 +43,6 @@
 
 ### 配置ルール
 - フロントエンドコンポーネント → `frontend/src/components/`
-- バックエンドAPIエンドポイント → `backend/app/api/routes/`
-- 共通処理 → `frontend/src/utils/` または `backend/app/utils/`
+- バックエンドAPIエンドポイント → `backend/app/main.py`
+- 共通処理 → `backend/app/core/` または `backend/app/services/`
 - 外部サービス連携 → `backend/app/services/`

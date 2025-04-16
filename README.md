@@ -16,15 +16,16 @@ AIがあなたの"今夜だけの星座"を作るWebアプリケーション
 ## 技術スタック
 
 ### フロントエンド
-- React
-- TypeScript
-- Material-UI
+- React 18.2.0
+- TypeScript 5.3.3
+- Vite 5.0.0
+- Material-UI 5.14.20
 
 ### バックエンド
-- Python
-- FastAPI
-- OpenCV
-- OpenAI GPT-4
+- Python 3.9以上
+- FastAPI 0.104.1
+- OpenCV 4.8.1.78
+- OpenAI GPT-4 API
 
 ## 開発環境のセットアップ
 
@@ -57,6 +58,12 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
+または、フロントエンドとバックエンドを同時に起動する場合：
+```bash
+cd frontend
+npm run start
+```
+
 ## 環境変数
 
 バックエンドの`.env`ファイルに以下の環境変数を設定してください：
@@ -70,6 +77,28 @@ DATABASE_URL=postgresql://user:password@localhost:5432/constellation_db
 
 # セキュリティ設定
 SECRET_KEY=your_secret_key
+```
+
+## プロジェクト構造
+
+```
+/
+├── frontend/                     # フロントエンド（React + TypeScript + Vite）
+│   ├── src/                      # ソースコード
+│   │   ├── components/           # Reactコンポーネント
+│   │   ├── App.tsx               # メインアプリケーションコンポーネント
+│   │   └── main.tsx              # エントリーポイント
+│   └── ...
+│
+├── backend/                      # バックエンド（Python + FastAPI）
+│   ├── app/                      # アプリケーションコード
+│   │   ├── core/                 # コア機能
+│   │   ├── services/             # 外部サービス連携
+│   │   └── main.py               # アプリケーションエントリーポイント
+│   ├── tests/                    # テスト
+│   └── ...
+│
+└── ...
 ```
 
 ## ライセンス

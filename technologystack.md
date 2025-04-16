@@ -1,21 +1,27 @@
 # 技術スタック
 
 ## フロントエンド
-- React: ^18.0.0
-- TypeScript: ^5.0.0
-- Vite: ^5.0.0
-- Material-UI: ^5.0.0
+- React: 18.2.0
+- TypeScript: 5.3.3
+- Vite: 5.0.0
+- Material-UI: 5.14.20
+- Axios: 1.6.2
+- React Router DOM: 6.20.1
+- React Dropzone: 14.2.3
 
 ## バックエンド
-- Python: ^3.9.0
-- FastAPI: ^0.100.0
-- OpenCV: ^4.8.0
-- OpenAI GPT-4 API
+- Python: 3.9以上
+- FastAPI: 0.104.1
+- OpenCV: 4.8.1.78
+- OpenAI GPT-4 API: 1.3.5
+- Pillow: 10.1.0
+- NumPy: 1.26.2
+- Pydantic: 2.5.2
 
 ## 開発ツール
-- Node.js: ^18.0.0
-- npm: ^10.0.0
-- pip: ^23.0.0
+- Node.js: 18以上
+- npm: 10.0.0以上
+- pip: 23.0.0以上
 
 ## 外部サービス連携
 - OpenAI GPT-4 API
@@ -46,6 +52,7 @@ SECRET_KEY=your_secret_key
 
 ## 実装規則
 - フロントエンドのコンポーネントは`frontend/src/components/`に配置
-- バックエンドのAPIエンドポイントは`backend/app/api/routes/`に配置
+- バックエンドのAPIエンドポイントは`backend/app/main.py`に配置
 - 外部サービス連携は`backend/app/services/`に配置
+- コア機能は`backend/app/core/`に配置
 - 環境変数は必ず`.env`ファイルで管理
