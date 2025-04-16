@@ -30,10 +30,15 @@ def validate_image(file_content: bytes) -> bool:
     try:
         image_bytes = io.BytesIO(file_content)
         image = Image.open(image_bytes)
-        image.verify()
         
-        image_bytes.seek(0)
+        try:
+            image.verify()
+        except Exception as verify_error:
+            logger.warning(f"画像検証エラー（無視して続行）: {verify_error}")
+            
+        image_bytes = io.BytesIO(file_content)
         image = Image.open(image_bytes)
+        
         width, height = image.size
         if width == 0 or height == 0:
             logger.error("画像サイズが無効です")
