@@ -47,4 +47,8 @@ frontend/dist/
 backend/__pycache__/
 *.log
 uploads/
-temp/ 
+temp/
+
+# Environment variables
+.envrc
+.env 
