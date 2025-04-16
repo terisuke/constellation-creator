@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def draw_constellation_lines(image_path: str, points: List[List[Tuple[int, int]]], output_path: Optional[str] = None) -> str:
+def draw_constellation_lines(image_path: str, points: List[List[Tuple[int, int]]], output_path: Optional[str] = None) -> Dict[str, Any]:
     """
     星座のラインを描画する
     
@@ -18,7 +18,7 @@ def draw_constellation_lines(image_path: str, points: List[List[Tuple[int, int]]
         output_path: 出力画像のパス（指定がない場合は自動生成）
         
     Returns:
-        描画された画像のパス
+        描画された画像のパスと星座ラインの情報を含む辞書
     """
     try:
         import os
@@ -62,12 +62,20 @@ def draw_constellation_lines(image_path: str, points: List[List[Tuple[int, int]]
                 [(100, 100), (200, 150), (300, 200), (400, 250), (500, 300)]
             ]
         
+        constellation_data = {
+            "stars": [],
+            "lines": []
+        }
+        
         for cluster_points in points:
             if len(cluster_points) < 3:
                 continue
                 
             connected = [cluster_points[0]]  # 最初の点を追加
             remaining = cluster_points[1:]
+            
+            for x, y in cluster_points:
+                constellation_data["stars"].append({"x": x, "y": y})
             
             while remaining:
                 last_point = connected[-1]
@@ -83,6 +91,11 @@ def draw_constellation_lines(image_path: str, points: List[List[Tuple[int, int]]
                 
                 closest_point = remaining.pop(closest_idx)
                 connected.append(closest_point)
+                
+                constellation_data["lines"].append({
+                    "start": {"x": last_point[0], "y": last_point[1]},
+                    "end": {"x": closest_point[0], "y": closest_point[1]}
+                })
                 
                 draw.line([last_point, closest_point], fill=(255, 215, 0), width=2)
                 
@@ -106,7 +119,10 @@ def draw_constellation_lines(image_path: str, points: List[List[Tuple[int, int]]
             image.save(output_path, format='JPEG')
             logger.info(f"代替パスに星座画像を保存しました: {output_path}")
         
-        return output_path
+        return {
+            "image_path": output_path,
+            "constellation_data": constellation_data
+        }
     except Exception as e:
         logger.error(f"星座線の描画中にエラーが発生しました: {e}")
         try:
@@ -118,15 +134,29 @@ def draw_constellation_lines(image_path: str, points: List[List[Tuple[int, int]]
             draw = ImageDraw.Draw(fallback_image)
             
             default_points = [(100, 100), (200, 150), (300, 200), (400, 250), (500, 300)]
+            
+            constellation_data = {
+                "stars": [{"x": x, "y": y} for x, y in default_points],
+                "lines": []
+            }
+            
             for i in range(len(default_points) - 1):
                 draw.line([default_points[i], default_points[i+1]], fill=(255, 215, 0), width=2)
+                constellation_data["lines"].append({
+                    "start": {"x": default_points[i][0], "y": default_points[i][1]},
+                    "end": {"x": default_points[i+1][0], "y": default_points[i+1][1]}
+                })
+                
             for point in default_points:
                 x, y = point
                 draw.ellipse([(x-3, y-3), (x+3, y+3)], fill=(255, 255, 255))
                 
             fallback_image.save(output_path, format='JPEG')
             logger.info(f"エラー発生時のフォールバック: 星座画像を生成しました: {output_path}")
-            return output_path
+            return {
+                "image_path": output_path,
+                "constellation_data": constellation_data
+            }
         except Exception as fallback_error:
             logger.error(f"フォールバック画像の生成に失敗しました: {fallback_error}")
             raise
