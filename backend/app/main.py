@@ -124,14 +124,22 @@ async def health_check():
 @app.get("/api/images/{image_name}")
 async def get_image(image_name: str):
     """画像ファイルを取得するエンドポイント"""
-    image_path = f"temp_{image_name}"
-    if os.path.exists(image_path):
-        return FileResponse(image_path)
+    possible_paths = [
+        f"temp_{image_name}",
+        f"static/images/{image_name}",
+        image_name if os.path.isabs(image_name) else None,
+        f"/tmp/{image_name}"
+    ]
     
-    static_path = f"static/images/{image_name}"
-    if os.path.exists(static_path):
-        return FileResponse(static_path)
-        
+    possible_paths = [p for p in possible_paths if p]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            print(f"画像が見つかりました: {path}")
+            return FileResponse(path)
+    
+    print(f"画像が見つかりません: {image_name}")
+    print(f"試行したパス: {possible_paths}")
     raise HTTPException(status_code=404, detail="画像が見つかりません")
 
 
@@ -160,12 +168,16 @@ async def generate_constellation(
         print(f"- ラインの数: {len(constellation_data.get('constellation_lines', []))}")
 
         constellation_image_path = constellation_data["image_path"]
-        static_image_filename = f"{os.path.basename(constellation_image_path)}"
+        static_image_filename = os.path.basename(constellation_image_path)
         static_image_path = f"static/images/{static_image_filename}"
         
-        shutil.copy(constellation_image_path, static_image_path)
+        try:
+            shutil.copy(constellation_image_path, static_image_path)
+            print(f"画像を静的ディレクトリにコピーしました: {static_image_path}")
+        except Exception as copy_error:
+            print(f"画像のコピー中にエラーが発生しました: {copy_error}")
         
-        image_url = f"/static/images/{static_image_filename}"
+        image_url = f"/api/images/{static_image_filename}"
         
         # レスポンスを返す前に形式を確認
         response_data = {
