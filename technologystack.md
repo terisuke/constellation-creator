@@ -11,7 +11,6 @@
 - FastAPI: ^0.100.0
 - OpenCV: ^4.8.0
 - OpenAI GPT-4 API
-- Stable Diffusion API
 
 ## 開発ツール
 - Node.js: ^18.0.0
@@ -22,15 +21,20 @@
 - OpenAI GPT-4 API
   - 星座名生成
   - 星座ストーリー生成
-- Stable Diffusion API
-  - 星空画像生成
-  - 画像処理と最適化
+
+## 画像処理機能
+- OpenCV
+  - 星の検出
+  - 画像の前処理
+  - 星座ラインの描画
+- Pillow
+  - 画像フォーマット変換
+  - 画像の最適化
 
 ## 環境変数
 バックエンドの`.env`ファイルに以下の環境変数を設定してください：
 ```
 OPENAI_API_KEY=your_api_key_here
-STABLE_DIFFUSION_API_KEY=your_api_key_here
 ```
 
 ## 実装規則
