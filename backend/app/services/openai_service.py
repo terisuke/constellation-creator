@@ -62,7 +62,7 @@ def generate_constellation_name(keyword: str, language: str = "ja") -> str:
         prompt = f"以下のキーワードに基づいて、新しい星座の名前を考えてください。名前は短く魅力的で、{language}で表現してください。キーワード: {keyword}"
         
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4.1-2025-04-14",
             messages=[
                 {"role": "system", "content": "あなたは創造的な星座命名AIアシスタントです。与えられたキーワードを元に、新しい星座の名前を生成します。"},
                 {"role": "user", "content": prompt}

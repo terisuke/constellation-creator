@@ -128,11 +128,11 @@ graph LR
 - React Dropzone 14.2.3
 
 ### バックエンド
-- Python 3.9以上
+- Python 3.11以上
 - FastAPI 0.104.1
 - OpenCV 4.8.1.78
 - OpenAI GPT-4 API 1.3.5
-- Pillow 10.1.0
+- Pillow 10.0.0
 - NumPy 1.26.2
 - Pydantic 2.5.2
 
