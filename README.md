@@ -51,21 +51,96 @@ AIがあなたの"今夜だけの星座"を作るWebアプリケーション
 - 複数の星座パターンの生成と選択
 - 生成された星座の保存と共有
 
-## 技術スタック
+## システムアーキテクチャ
+
+### クラウドアーキテクチャ
+```mermaid
+graph TB
+    subgraph "Google Cloud Platform"
+        CR[Cloud Run]
+        CS[Cloud Storage]
+        CDN[Cloud CDN]
+    end
+    
+    subgraph "フロントエンド"
+        FE[React + TypeScript]
+        UI[Material-UI]
+        Canvas[Canvas API]
+    end
+    
+    subgraph "バックエンド"
+        API[FastAPI]
+        CV[OpenCV]
+        AI[OpenAI API]
+        ML[scikit-learn]
+    end
+    
+    User((ユーザー)) --> CDN
+    CDN --> CR
+    CR --> CS
+    CR --> API
+    API --> CV
+    API --> AI
+    API --> ML
+    FE --> API
+    UI --> FE
+    Canvas --> FE
+```
+
+### システム構成図
+```mermaid
+graph LR
+    subgraph "フロントエンド"
+        UI[UI Layer]
+        State[State Management]
+        API[API Client]
+    end
+    
+    subgraph "バックエンド"
+        EP[API Endpoints]
+        Core[Core Services]
+        Ext[External Services]
+    end
+    
+    subgraph "外部サービス"
+        OpenAI[OpenAI API]
+        Storage[Cloud Storage]
+    end
+    
+    UI --> State
+    State --> API
+    API --> EP
+    EP --> Core
+    Core --> Ext
+    Ext --> OpenAI
+    Ext --> Storage
+```
+
+## 技術スタック詳細
 
 ### フロントエンド
-- React + TypeScript
-- Material-UI
-- Canvas API for 星座描画
-- WebRTC for カメラ機能
+- React 18.2.0
+- TypeScript 5.3.3
+- Vite 5.0.0
+- Material-UI 5.14.20
+- Axios 1.6.2
+- React Router DOM 6.20.1
+- React Dropzone 14.2.3
 
 ### バックエンド
-- FastAPI
-- OpenCV for 画像処理
-- OpenAI API for 星座生成
-- scikit-learn for クラスタリング
-- NumPy
-- Pillow
+- Python 3.9以上
+- FastAPI 0.104.1
+- OpenCV 4.8.1.78
+- OpenAI GPT-4 API 1.3.5
+- Pillow 10.1.0
+- NumPy 1.26.2
+- Pydantic 2.5.2
+
+### クラウドインフラ
+- Google Cloud Run
+- Google Cloud Storage
+- Google Cloud CDN
+- Cloud Build
 
 ## デプロイ情報
 
