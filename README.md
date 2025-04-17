@@ -154,25 +154,46 @@ graph LR
 
 ### 必要条件
 - Node.js 18以上
-- Python 3.9以上
+- Python 3.11以上
 - pip
+- Make
 
 ### インストール手順
 
 1. リポジトリのクローン
 ```bash
-git clone [repository-url]
+git clone https://github.com/terisuke/constellation-creator.git
 cd constellation-creator
 ```
 
-2. フロントエンドのセットアップ
+2. Makefileを使用したセットアップ
+```bash
+# 開発環境の完全セットアップ（推奨）
+make setup
+
+# 依存関係のインストール
+make install
+
+# アプリケーションの実行
+make run
+
+# コードのリント
+make lint
+
+# クリーンアップ（node_modulesとvenvを削除）
+make clean
+```
+
+### 手動セットアップ（Makefileを使用しない場合）
+
+1. フロントエンドのセットアップ
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-3. バックエンドのセットアップ
+2. バックエンドのセットアップ
 ```bash
 cd backend
 python -m venv venv
